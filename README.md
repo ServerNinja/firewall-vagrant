@@ -35,6 +35,15 @@ There are three vboxnet networks that are "private" and not routable to each oth
                 can manage VM / SSH
 ```
 
+# Pre-requisites:
+* Operating System: Mac OSX or Linux
+* Supported Hypervisors
+  * [Virtualbox](https://www.virtualbox.org/) >= 6
+  * [libvirt](https://libvirt.org/) on linux (KVM)
+    * vagrant-libvirt plugin required for vagrant
+* [Vagrant](https://www.vagrantup.com/) >= 2.2.8
+
+
 # Configuration
 
 ## Firewall
