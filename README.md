@@ -39,12 +39,12 @@ There are three vboxnet networks that are "private" and not routable to each oth
 * Operating System: Mac OSX or Linux
 * Supported Hypervisors
   * [Virtualbox](https://www.virtualbox.org/) >= 6
-  * [libvirt](https://libvirt.org/) on linux (KVM)
-    * vagrant-libvirt plugin required for vagrant
 * [Vagrant](https://www.vagrantup.com/) >= 2.2.8
 
 
 # Configuration
+## Networking
+NOTE: you may need to create three private networks in your virtualbox configuration: vboxnet1, vboxnet2, vboxnet3
 
 ## Firewall
 in the `node_info` settings, you can configure the firewall (role: "firewall") with any number of "networks" and specify which private or public network you wish to attach them to.
