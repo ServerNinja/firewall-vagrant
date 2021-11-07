@@ -1,0 +1,54 @@
+---
+######## Begin Node Definition ########
+### Define the nodes by their node name, IP, and Role (firewall or client).
+# Additional options shown below...
+vagrant_box: "bento/ubuntu-20.04"
+node_info:
+  firewall:
+      memory: 1024       # <=== Default to 1024 if not defined
+      cpus: 1            # <=== Default to 1 if not defined
+      role: firewall
+      networks:
+        - name: vboxnet1      # Office Network
+          mode: private
+          ip: 192.168.100.254
+        - name: vboxnet2      # Server Network
+          mode: private
+          ip: 192.168.150.254
+        - name: vboxnet3      # Family network
+          mode: private
+          ip: 192.168.200.254
+  office1: # On Office Network
+      memory: 1024
+      cpus: 1
+      role: client 
+      networks:
+        - name: vboxnet1
+          mode: private
+          ip: 192.168.100.100
+          netmask: 255.255.255.0
+          default_router: 192.168.100.254
+          nameservers: "[ 8.8.8.8, 8.8.4.4 ]"
+  server1: # On Server Network
+      memory: 1024
+      cpus: 1
+      role: client
+      networks:
+        - name: vboxnet2
+          mode: private
+          ip: 192.168.150.100
+          netmask: 255.255.255.0
+          default_router: 192.168.150.254
+          nameservers: "[ 8.8.8.8, 8.8.4.4 ]"
+  family1: # On Family Network
+      memory: 1024
+      cpus: 1
+      role: client 
+      networks:
+        - name: vboxnet3
+          mode: private
+          ip: 192.168.200.100
+          netmask: 255.255.255.0
+          default_router: 192.168.200.254
+          nameservers: "[ 8.8.8.8, 8.8.4.4 ]"
+######## End Node Definition ########
