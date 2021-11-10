@@ -4,7 +4,7 @@
 # Additional options shown below...
 vagrant_box: "bento/ubuntu-20.04"
 node_info:
-  firewall:
+  firewall1:
       memory: 1024       # <=== Default to 1024 if not defined
       cpus: 1            # <=== Default to 1 if not defined
       role: firewall
