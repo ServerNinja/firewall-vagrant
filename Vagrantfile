@@ -3,7 +3,7 @@ require 'yaml'
 settings = YAML.load_file("settings.yml")
 
 dictNodeInfo = settings['node_info']
-vagrantBox = settings['vagrant_box']
+defaultVagrantBox = settings['vagrant_box']
 
 Vagrant.configure(2) do |config|
   #Define the number of nodes to spin up
@@ -12,7 +12,7 @@ Vagrant.configure(2) do |config|
     nodeInfo = dictNodeInfo[hostname]
 
     config.vm.define hostname do |node|
-      node.vm.box = vagrantBox
+      node.vm.box = nodeInfo['vagrant_box'] || defaultVagrantBox
       node.vm.provider "virtualbox" do |vb|
         vb.memory = nodeInfo['memory'] || 1096
         vb.cpus = nodeInfo['cpus'] || 1

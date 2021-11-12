@@ -2,9 +2,13 @@
 ######## Begin Node Definition ########
 ### Define the nodes by their node name, IP, and Role (firewall or client).
 # Additional options shown below...
+
+# Vagrant box - this can have an override at node level
 vagrant_box: "bento/ubuntu-20.04"
+
 node_info:
   firewall1:
+      vagrant_box: "bento/debian-11"
       memory: 1024       # <=== Default to 1024 if not defined
       cpus: 1            # <=== Default to 1 if not defined
       role: firewall
