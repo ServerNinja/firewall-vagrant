@@ -4,6 +4,7 @@ settings = YAML.load_file("settings.yml")
 
 dictNodeInfo = settings['node_info']
 defaultVagrantBox = settings['vagrant_box']
+defaultGuestOSType = settings['vagrant_guest_os'] || "linux"
 
 Vagrant.configure(2) do |config|
   #Define the number of nodes to spin up
@@ -16,6 +17,18 @@ Vagrant.configure(2) do |config|
       node.vm.provider "virtualbox" do |vb|
         vb.memory = nodeInfo['memory'] || 1096
         vb.cpus = nodeInfo['cpus'] || 1
+      end
+
+      osType = nodeInfo['vagrant_guest_os'] || defaultGuestOSType
+      case osType
+      when "openbsd"
+        node.vm.guest = :openbsd
+      when "freebsd"
+        node.vm.guest = :freebsd
+      when "windows"
+        node.vm.guest = :windows
+      else
+        node.vm.guest = :linux
       end
 
       node.vm.hostname = hostname

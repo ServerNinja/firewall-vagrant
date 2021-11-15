@@ -5,10 +5,12 @@
 
 # Vagrant box - this can have an override at node level
 vagrant_box: "bento/ubuntu-20.04"
+vagrant_guest_os: "linux"
 
 node_info:
   firewall1:
-      vagrant_box: "bento/debian-11"
+      vagrant_box: "bento/freebsd-13"
+      vagrant_guest_os: "freebsd"
       memory: 1024       # <=== Default to 1024 if not defined
       cpus: 1            # <=== Default to 1 if not defined
       role: firewall
