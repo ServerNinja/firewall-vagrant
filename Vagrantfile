@@ -19,18 +19,7 @@ Vagrant.configure(2) do |config|
         vb.cpus = nodeInfo['cpus'] || 1
       end
 
-      osType = nodeInfo['vagrant_guest_os'] || defaultGuestOSType
-      case osType
-      when "openbsd"
-        node.vm.guest = :openbsd
-      when "freebsd"
-        node.vm.guest = :freebsd
-      when "windows"
-        node.vm.guest = :windows
-      else
-        node.vm.guest = :linux
-      end
-
+      node.vm.guest = nodeInfo['vagrant_guest_os'] || defaultGuestOSType
       node.vm.hostname = hostname
 
       # Loop through networks and add NICs

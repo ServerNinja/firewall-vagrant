@@ -5,7 +5,7 @@
 
 # Vagrant box - this can have an override at node level
 vagrant_box: "bento/ubuntu-20.04"
-vagrant_guest_os: "linux"
+vagrant_guest_os: "ubuntu"
 
 node_info:
   firewall1:
