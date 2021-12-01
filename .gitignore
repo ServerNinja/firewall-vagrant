@@ -6,3 +6,6 @@ vendor
 
 # Vagrant
 .vagrant
+
+# Ansible
+provisioning/ansible_collections/*

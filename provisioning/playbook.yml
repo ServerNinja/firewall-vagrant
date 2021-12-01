@@ -1,0 +1,11 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - debug: 
+        var: ansible_default_ipv4.address
+
+    ### Required Packages ###
+    ### Import from settings.yml
+    - set_fact:
+        hello_world: "Hello World"

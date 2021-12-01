@@ -2,9 +2,21 @@
 require 'yaml'
 settings = YAML.load_file("settings.yml")
 
+ansibleProvisioning = settings['ansible_provisioning']
+
+#if ansibleProvisioning
+#  system("
+#      if [ '#{ARGV[0]}' = 'up' ] || [ '#{ARGV[0]}' = 'provision' ]; then
+#        ansible-galaxy collection install community.kubernetes -p provisioning/ansible_collections/
+#      fi
+#  ")
+#end
+
 dictNodeInfo = settings['node_info']
 defaultVagrantBox = settings['vagrant_box']
 defaultGuestOSType = settings['vagrant_guest_os'] || "linux"
+
+ansibleFirewallGroup = []
 
 Vagrant.configure(2) do |config|
   #Define the number of nodes to spin up
@@ -18,6 +30,8 @@ Vagrant.configure(2) do |config|
         vb.memory = nodeInfo['memory'] || 1096
         vb.cpus = nodeInfo['cpus'] || 1
       end
+
+      node.ssh.forward_agent = true
 
       node.vm.guest = nodeInfo['vagrant_guest_os'] || defaultGuestOSType
       node.vm.hostname = hostname
@@ -68,6 +82,28 @@ SCRIPT
 
         node.vm.provision :shell, :inline => $script
       end
+
+      # Ansible stuff
+      if nodeInfo['role'] == "firewall"
+        ansibleFirewallGroup.append(hostname)
+      end 
+
+      if index == dictNodeInfo.keys.length() - 1 and ansibleProvisioning
+        node.vm.provision "ansible" do |ansible|
+          ansible.limit    = "all"
+          ansible.verbose  = "vv"
+          ansible.playbook = "provisioning/playbook.yml"
+          ansible.galaxy_role_file = "provisioning/requirements.yaml"
+          ansible.config_file = "provisioning/ansible.cfg"
+
+          ansible.groups = {
+            "all:vars" => {
+              "deploy_user" => "vagrant",
+            },
+            "firewall" => ansibleFirewallGroup
+          }
+        end
+      end 
     end
   end
 end

@@ -3,27 +3,34 @@
 ### Define the nodes by their node name, IP, and Role (firewall or client).
 # Additional options shown below...
 
+# Use Ansible provisioning to configure nodes?
+ansible_provisioning: true
+
 # Vagrant box - this can have an override at node level
 vagrant_box: "bento/ubuntu-20.04"
 vagrant_guest_os: "ubuntu"
 
 node_info:
   firewall1:
-      vagrant_box: "generic/openbsd6" # generic/openbsd7 seems to have authentication issues so I'm using openbsd6
-      vagrant_guest_os: "openbsd"
+      #vagrant_box: "generic/openbsd6" # generic/openbsd7 seems to have authentication issues so I'm using openbsd6
+      #vagrant_guest_os: "openbsd"
+      #vagrant_box: "bento/debian-11.1" # AppArmor sucks and SELinux breaks debian - WTF?!?!
+      #vagrant_guest_os: "debian"
+      vagrant_box: "rockylinux/8"
+      vagrant_guest_os: "rocky"
       memory: 1024       # <=== Default to 1024 if not defined
       cpus: 1            # <=== Default to 1 if not defined
       role: firewall
       networks:
         - name: vboxnet1      # Office Network
           mode: private
-          ip: 192.168.100.254
+          ip: 192.168.56.254
         - name: vboxnet2      # Server Network
           mode: private
-          ip: 192.168.150.254
+          ip: 192.168.57.254
         - name: vboxnet3      # Family network
           mode: private
-          ip: 192.168.200.254
+          ip: 192.168.58.254
   office1: # On Office Network
       memory: 1024
       cpus: 1
@@ -31,9 +38,9 @@ node_info:
       networks:
         - name: vboxnet1
           mode: private
-          ip: 192.168.100.100
+          ip: 192.168.56.100
           netmask: 255.255.255.0
-          default_router: 192.168.100.254
+          default_router: 192.168.56.254
           nameservers: "[ 8.8.8.8, 8.8.4.4 ]"
   server1: # On Server Network
       memory: 1024
@@ -42,9 +49,9 @@ node_info:
       networks:
         - name: vboxnet2
           mode: private
-          ip: 192.168.150.100
+          ip: 192.168.57.100
           netmask: 255.255.255.0
-          default_router: 192.168.150.254
+          default_router: 192.168.57.254
           nameservers: "[ 8.8.8.8, 8.8.4.4 ]"
   family1: # On Family Network
       memory: 1024
@@ -53,8 +60,8 @@ node_info:
       networks:
         - name: vboxnet3
           mode: private
-          ip: 192.168.200.100
+          ip: 192.168.58.100
           netmask: 255.255.255.0
-          default_router: 192.168.200.254
+          default_router: 192.168.58.254
           nameservers: "[ 8.8.8.8, 8.8.4.4 ]"
 ######## End Node Definition ########

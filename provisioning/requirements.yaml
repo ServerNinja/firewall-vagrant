@@ -1,0 +1,6 @@
+---
+## Ansible Galaxy Configuration
+
+collections: []
+#  - name: community.kubernetes
+#    version: 1.2.0
