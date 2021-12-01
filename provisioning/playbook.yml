@@ -3,9 +3,20 @@
   become: true
   tasks:
     - debug: 
-        var: ansible_default_ipv4.address
+        var: ansible_os_family
 
-    ### Required Packages ###
-    ### Import from settings.yml
+
+- hosts: firewall
+  become: true
+
+  tasks:
     - set_fact:
-        hello_world: "Hello World"
+        role: "I'm a firewall!"
+
+    - include_role:
+        name: "iptables/rocky"
+      when: ansible_os_family == "Rocky"
+
+    - include_role:
+        name: "iptables/debian"
+      when: ansible_os_family == "Debian"
