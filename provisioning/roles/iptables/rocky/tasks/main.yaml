@@ -1,4 +1,30 @@
 ---
+#- name: Upgrade all packages
+#  yum:
+#    name: '*'
+#    state: latest
+#  become: true
 
-- debug:
-    msg: "I'm rocky"
+# Disable firewalld
+- name: Stop firewalld service
+  ansible.builtin.systemd:
+    name: firewalld
+    state: stopped
+    masked: true
+    enabled: false
+  become: true
+
+# Install / enable iptables
+- name: Install iptables (legacy)
+  yum:
+    name: 
+      - iptables-services
+      - iptables-utils
+    state: latest
+  become: true
+
+- name: Enable Iptables In Systemd
+  ansible.builtin.systemd:
+    name: iptables
+    enabled: true
+  become: true

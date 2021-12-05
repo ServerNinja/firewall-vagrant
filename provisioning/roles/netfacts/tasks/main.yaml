@@ -1,0 +1,75 @@
+---
+- set_fact:
+    fw_iface_list: "{{ ansible_facts.interfaces | map('extract', ansible_facts ) | list }}"
+
+# WAN Net Information
+- set_fact:
+    fw_wan_details: "{{ fw_iface_list | selectattr('device', 'equalto', fw_wan_if) | first }}"
+
+- set_fact:
+    fw_wan_address: "{{ fw_wan_details.ipv4.address }}"
+    fw_wan_network: "{{ fw_wan_details.ipv4.network }}"
+    fw_wan_netmask: "{{ fw_wan_details.ipv4.netmask }}"
+
+- set_fact:
+    fw_wan_net_cidr: "{{ fw_wan_network }}/{{ (fw_wan_network + '/' + fw_wan_netmask) | ipaddr('prefix') }}"
+    
+# OFFICE Net Information
+- set_fact:
+    fw_office_details: "{{ fw_iface_list | selectattr('device', 'equalto', fw_office_if) | first }}"
+  when: fw_office_net_enabled
+
+- set_fact:
+    fw_office_address: "{{ fw_office_details.ipv4.address }}"
+    fw_office_network: "{{ fw_office_details.ipv4.network }}"
+    fw_office_netmask: "{{ fw_office_details.ipv4.netmask }}"
+  when: fw_office_net_enabled
+
+- set_fact:
+    fw_office_net_cidr: "{{ fw_office_network }}/{{ (fw_office_network + '/' + fw_office_netmask) | ipaddr('prefix') }}"
+  when: fw_office_net_enabled
+
+# SERVER Net Information
+- set_fact:
+    fw_server_details: "{{ fw_iface_list | selectattr('device', 'equalto', fw_server_if) | first }}"
+  when: fw_server_net_enabled
+
+- set_fact:
+    fw_server_address: "{{ fw_server_details.ipv4.address }}"
+    fw_server_network: "{{ fw_server_details.ipv4.network }}"
+    fw_server_netmask: "{{ fw_server_details.ipv4.netmask }}"
+  when: fw_server_net_enabled
+
+- set_fact:
+    fw_server_net_cidr: "{{ fw_server_network }}/{{ (fw_server_network + '/' + fw_server_netmask) | ipaddr('prefix') }}"
+  when: fw_server_net_enabled
+
+# FAMILY Net Information
+- set_fact:
+    fw_family_details: "{{ fw_iface_list | selectattr('device', 'equalto', fw_family_if) | first }}"
+  when: fw_family_net_enabled
+
+- set_fact:
+    fw_family_address: "{{ fw_family_details.ipv4.address }}"
+    fw_family_network: "{{ fw_family_details.ipv4.network }}"
+    fw_family_netmask: "{{ fw_family_details.ipv4.netmask }}"
+  when: fw_family_net_enabled
+
+- set_fact:
+    fw_family_net_cidr: "{{ fw_family_network }}/{{ (fw_family_network + '/' + fw_family_netmask) | ipaddr('prefix') }}"
+  when: fw_family_net_enabled
+
+# DMZ Net Information
+- set_fact:
+    fw_dmz_details: "{{ fw_iface_list | selectattr('device', 'equalto', fw_dmz_if) | first }}"
+  when: fw_dmz_net_enabled
+
+- set_fact:
+    fw_dmz_address: "{{ fw_dmz_details.ipv4.address }}"
+    fw_dmz_network: "{{ fw_dmz_details.ipv4.network }}"
+    fw_dmz_netmask: "{{ fw_dmz_details.ipv4.netmask }}"
+  when: fw_dmz_net_enabled
+
+- set_fact:
+    fw_dmz_net_cidr: "{{ fw_dmz_network }}/{{ (fw_dmz_network + '/' + fw_dmz_netmask) | ipaddr('prefix') }}"
+  when: fw_dmz_net_enabled

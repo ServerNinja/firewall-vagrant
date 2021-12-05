@@ -1,0 +1,33 @@
+# WAN Net Configuration
+fw_nat_enabled: true
+fw_wan_if: eth0
+fw_ssh_from_wan_net_enabled: false
+
+#LAN Configuration
+fw_dns_server: false
+fw_dhcp_server: true
+fw_dynamic_dns: true
+
+# OFFICE Net Configuration
+fw_office_net_enabled: true
+fw_office_net_dhcp: true
+fw_office_if: eth1
+fw_ssh_from_office_net_enabled: true
+
+# SERVER Net Configuration
+fw_server_net_enabled: true
+fw_server_net_dhcp: true
+fw_server_if: eth2
+fw_ssh_from_server_net_enabled: true
+
+# FAMILY Net Configuration
+fw_family_net_enabled: true
+fw_family_net_dhcp: true
+fw_family_if: eth3
+fw_ssh_from_family_net_enabled: false
+
+# DMZ Net Configuration
+fw_dmz_net_enabled: false
+fw_dmz_net_dhcp: false
+fw_dmz_if: eth4
+fw_ssh_from_dmz_net_enabled: false

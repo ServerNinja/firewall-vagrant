@@ -1,0 +1,378 @@
+### RNDC (Dynamic DNS Updates)
+- set_fact:
+    rndc_key_path: /etc/bind/rndc.key
+    rndc_conf_path: /etc/rndc.conf
+    bind_conf_path: /etc/bind
+    bind_conf_dir: /etc/bind
+    bind_cache_dir: /var/cache/bind
+    bind_zone_dir: /var/lib/bind
+    bind_user: bind
+    bind_group: bind
+    default_zones_file: /etc/bind/named.conf.default-zones
+  when:
+  - ansible_os_family == "Debian"
+
+- set_fact:
+    rndc_key_path: /etc/rndc.key
+    rndc_conf_path: /etc/rndc.conf
+    bind_conf_path: /etc
+    bind_conf_dir: /etc/named
+    bind_cache_dir: /var/named
+    bind_zone_dir: /var/named
+    bind_user: named
+    bind_group: named
+    default_zones_file: /etc/named.rfc1912.zones
+  when:
+  - ansible_os_family == "Rocky"
+
+- stat:
+    path: "{{ rndc_key_path }}"
+  register: rndc_key
+  when:
+  - fw_dynamic_dns
+  - fw_dhcp_server
+  - fw_dns_server
+  become: true
+
+- stat:
+    path: "{{ bind_cache_dir }}"
+  register: cache_dir
+  become: true
+
+- file:
+    state: directory
+    path: "{{ bind_cache_dir }}"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode: 0755
+  become: true
+  when: not cache_dir.stat.exists
+
+- stat:
+    path: "{{ rndc_conf_path }}"
+  register: rndc_conf
+  when:
+  - fw_dynamic_dns
+  - fw_dhcp_server
+  - fw_dns_server
+  become: true
+
+- stat:
+    path: "{{ bind_zone_dir }}"
+  register: zone_dir
+  become: true
+
+- file:
+    state: directory
+    path: "{{ bind_zone_dir }}"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode: 0755
+  become: true
+  when: not zone_dir.stat.exists
+
+- name: Generate new rndc.key
+  shell: rndc-confgen -a -b 512
+  when:
+  - fw_dynamic_dns
+  - fw_dhcp_server
+  - fw_dns_server
+  - not rndc_key.stat.exists or not rndc_conf.stat.exists
+  become: true
+
+- file:
+    state: file
+    path: "{{ rndc_key_path }}"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+  become: true
+
+- name: Get content of newly generated rndc.key file
+  slurp:
+    src: "{{ rndc_key_path }}"
+  register: rndc_key_content_encoded
+  when:
+  - fw_dynamic_dns
+  - fw_dhcp_server
+  - fw_dns_server
+  - not rndc_key.stat.exists or not rndc_conf.stat.exists
+  become: true
+
+- name: Generate rndc.conf file
+  copy:
+    dest: "{{ rndc_conf_path }}"
+    content: |
+      {{ rndc_key_content_encoded.content | b64decode }}
+
+      options {
+      	default-key "rndc-key";
+      	default-server 127.0.0.1;
+      	default-port 953;
+      };
+  when:
+  - fw_dynamic_dns
+  - fw_dhcp_server
+  - fw_dns_server
+  - not rndc_key.stat.exists or not rndc_conf.stat.exists
+  become: true
+
+- set_fact:
+    dns_acl: "{{ fw_office_net_cidr }}; {{ dns_acl | default('127.0.0.0/8;') }}"
+  when: fw_office_net_dhcp
+
+- set_fact:
+    dns_acl: "{{ fw_server_net_cidr }}; {{ dns_acl | default('127.0.0.0/8;') }}"
+  when: fw_server_net_dhcp
+  
+- set_fact:
+    dns_acl: "{{ fw_family_net_cidr }}; {{ dns_acl | default('127.0.0.0/8;') }}"
+  when: fw_family_net_dhcp
+  
+- set_fact:
+    dns_acl: "{{ fw_dmz_net_cidr }}; {{ dns_acl | default('127.0.0.0/8;') }}"
+  when: fw_dmz_net_dhcp
+
+- name: Render {{ bind_conf_path }}/named.conf file
+  ansible.builtin.template:
+    src: ./templates/named.conf.j2
+    dest: "{{ bind_conf_path }}/named.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: named_config_change
+
+- name: Render {{ bind_conf_dir }}/named.conf.options file
+  ansible.builtin.template:
+    src: ./templates/named.conf.options.j2
+    dest: "{{ bind_conf_dir }}/named.conf.options"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: named_conf_options_change
+
+- name: Render {{ bind_conf_dir }}/named.conf.local file
+  ansible.builtin.template:
+    src: ./templates/named.conf.local.j2
+    dest: "{{ bind_conf_dir }}/named.conf.local"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: named_conf_local_change
+
+- name: Render {{ bind_conf_dir }}/named.conf.log file
+  ansible.builtin.template:
+    src: ./templates/named.conf.log.j2
+    dest: "{{ bind_conf_dir }}/named.conf.log"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: named_conf_log_change
+
+- stat:
+    path: "{{ bind_zone_dir }}/db.{{ fw_network_internal_domain }}.zone"
+  become: true
+  register: internal_domain_file
+
+- name: Render {{ bind_zone_dir }}/db.{{ fw_network_internal_domain }}.zone file
+  ansible.builtin.template:
+    src: ./templates/domain.zone.j2
+    dest: "{{ bind_zone_dir }}/db.{{ fw_network_internal_domain }}.zone"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode: '0644'
+  become: true
+  register: domain_zone_change
+  when: 
+  - not internal_domain_file.stat.exists
+
+- stat:
+    path: "{{ bind_zone_dir }}/db.{{ fw_office_address | ipaddr('revdns') | regex_replace('^[0-9]+\\.', '') }}zone"
+  become: true
+  register: office_zone_file
+  when:
+  - fw_office_net_enabled
+
+- name: Render {{ bind_zone_dir }}/db.{{ fw_office_address | ipaddr('revdns') | regex_replace('^[0-9]+\.', '') }}zone file
+  ansible.builtin.template:
+    src: ./templates/addra-arpa.zone.j2
+    dest: "{{ bind_zone_dir }}/db.{{ fw_office_address | ipaddr('revdns') | regex_replace('^[0-9]+\\.', '') }}zone"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode: '0644'
+  become: true
+  register: domain_zone_change
+  when: 
+  - fw_office_net_enabled
+  - not office_zone_file.stat.exists
+
+- stat:
+    path: "{{ bind_zone_dir }}/db.{{ fw_server_address | ipaddr('revdns') | regex_replace('^[0-9]+\\.', '') }}zone"
+  become: true
+  register: server_zone_file
+  when:
+  - fw_server_net_enabled
+
+- name: Render {{ bind_zone_dir }}/db.{{ fw_server_address | ipaddr('revdns') | regex_replace('^[0-9]+\.', '') }}zone file
+  ansible.builtin.template:
+    src: ./templates/addra-arpa.zone.j2
+    dest: "{{ bind_zone_dir }}/db.{{ fw_server_address | ipaddr('revdns') | regex_replace('^[0-9]+\\.', '') }}zone"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode: '0644'
+  become: true
+  register: domain_zone_change
+  when: 
+  - fw_server_net_enabled
+  - not server_zone_file.stat.exists
+
+- stat:
+    path: "{{ bind_zone_dir }}/db.{{ fw_family_address | ipaddr('revdns') | regex_replace('^[0-9]+\\.', '') }}zone"
+  become: true
+  register: family_zone_file
+  when:
+  - fw_family_net_enabled
+
+- name: Render {{ bind_zone_dir }}/db.{{ fw_family_address | ipaddr('revdns') | regex_replace('^[0-9]+\.', '') }}zone file
+  ansible.builtin.template:
+    src: ./templates/addra-arpa.zone.j2
+    dest: "{{ bind_zone_dir }}/db.{{ fw_family_address | ipaddr('revdns') | regex_replace('^[0-9]+\\.', '') }}zone"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode: '0644'
+  become: true
+  register: domain_zone_change
+  when: 
+  - fw_family_net_enabled
+  - not family_zone_file.stat.exists
+
+- stat:
+    path: "{{ bind_zone_dir }}/db.{{ fw_dmz_address | ipaddr('revdns') | regex_replace('^[0-9]+\\.', '') }}zone"
+  become: true
+  register: dmz_zone_file
+  when:
+  - fw_dmz_net_enabled
+
+- name: Render {{ bind_zone_file }}/db.{{ fw_dmz_address | ipaddr('revdns') | regex_replace('^[0-9]+\.', '') }}zone file
+  ansible.builtin.template:
+    src: ./templates/addra-arpa.zone.j2
+    dest: "{{ bind_zone_file }}/db.{{ fw_dmz_address | ipaddr('revdns') | regex_replace('^[0-9]+\\.', '') }}zone"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode: '0644'
+  become: true
+  register: domain_zone_change
+  when: 
+  - fw_dmz_net_enabled
+  - not dmz_zone_file.stat.exists
+
+- name: /var/log/named directory
+  file:
+    state: directory
+    path: /var/log/named
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode: '0755'
+  become: true
+
+- name: Create empty log files
+  file:
+    path: '/var/log/named/{{ item }}'
+    state: touch
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode: '0644'
+    modification_time: preserve
+    access_time: preserve
+  with_items:
+  - default 
+  - auth_servers 
+  - dnssec 
+  - zone_transfers 
+  - ddns 
+  - client_security 
+  - rate_limiting 
+  - rpz 
+  - dnstap 
+  - queries 
+  - query-errors 
+  become: true
+
+- sefcontext:
+    target: '/var/log/named/{{ item }}'
+    setype: named_log_t
+    state: present
+  with_items:
+  - default 
+  - auth_servers 
+  - dnssec 
+  - zone_transfers 
+  - ddns 
+  - client_security 
+  - rate_limiting 
+  - rpz 
+  - dnstap 
+  - queries 
+  - query-errors 
+  become: true
+  when: 
+  - ansible_os_family == "Rocky"
+
+- name: Restore selinux config on /var/log/named/*
+  shell: restorecon /var/log/named/*
+  become: true
+  when: 
+  - ansible_os_family == "Rocky"
+
+- name: APPARMOR - Allow logging for bind service
+  lineinfile:
+    path: /etc/apparmor.d/usr.sbin.named
+    regex: '#include <local/usr.sbin.named>'
+    line: 'include <local/usr.sbin.named>'
+  register: apparmor_named_file
+  when: 
+  - ansible_os_family == "Debian"
+  become: true
+
+- name: APPARMOR - Allow logging for bind service
+  lineinfile:
+    path: /etc/apparmor.d/local/usr.sbin.named
+    insertafter: 'EOF'
+    line: '/var/log/named/** rw,'
+  register: apparmor_config_file
+  when: 
+  - ansible_os_family == "Debian"
+  become: true
+
+- name: Retart Apparmor service
+  ansible.builtin.systemd:
+    name: apparmor.service
+    enabled: true
+    state: restarted
+  when: 
+  - ansible_os_family == "Debian"
+  - apparmor_config_file.changed or apparmor_named_file.changed
+  become: true
+
+# Configure systemd
+- name: Render named.service systemd file
+  ansible.builtin.template:
+    src: ./templates/named.service.j2
+    dest: /etc/systemd/system/bind9.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: named_service_file
+
+- name: Enable / (Re)Start bind9 service
+  ansible.builtin.systemd:
+    name: bind9.service
+    enabled: true
+    state: restarted
+  when: 
+  - named_service_file.changed or apparmor_config_file.changed or apparmor_named_file.changed
+  become: true

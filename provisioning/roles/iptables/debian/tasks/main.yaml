@@ -1,4 +1,47 @@
 ---
+- name: Check for existence of UFW service
+  ansible.builtin.stat:
+    path: /lib/systemd/system/ufw.service
+  register: ufw_service
+  become: true
 
-- debug:
-    msg: "I'm debian"
+# Disable ufw
+- name: Stop ufw service
+  ansible.builtin.systemd:
+    name: ufw
+    state: stopped
+    masked: true
+    enabled: false
+  when: ufw_service.stat.exists
+  become: true
+
+- name: Configure iptables-persistent package answers
+  debconf:
+    name: iptables-persistent
+    question: "{{ item }}"
+    value: true
+    vtype: select
+  with_items:
+  - iptables-persistent/autosave_v4
+  - iptables-persistent/autosave_v6
+  become: true
+
+- name: Update repositories cache and install iptables packages
+  apt:
+    name:
+    - iptables
+    - iptables-persistent
+    update_cache: yes
+  become: true
+
+- name: Set iptables alternavies to iptables-legacy
+  community.general.alternatives:
+    name: "{{ item.name }}"
+    path: "{{ item.path }}"
+  loop:
+  - name: 'iptables'
+    path: '/usr/sbin/iptables-legacy'
+  - name: 'ip6tables'
+    path: '/usr/sbin/ip6tables-legacy'
+  when: fw_use_iptables_legacy | default(true)
+  become: true

@@ -1,0 +1,63 @@
+---
+### NOTE: IPTABLES and Modprobe commands are run synchronously from top down using ansible.builtin.shell
+- name: MODPROBE - Enable modules
+  ansible.builtin.shell: modprobe {{ item }}
+  with_items:
+    - ip_conntrack
+    - iptable_nat
+  become: true
+
+- name: IPTABLES - temporary configure default ACCEPT on tables
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-P INPUT ACCEPT"
+  - "-P OUTPUT ACCEPT"
+  - "-P FORWARD ACCEPT"
+  become: true
+
+- name: IPTABLES - Flush all rules in filter and NAT tables
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "--flush"
+  - "--table nat --flush"
+  - "-X"
+  become: true
+
+# NAT Configurations
+- include_tasks: nat.yaml
+
+# Connection State Tracking Configs
+- include_tasks: connection_state_tracking.yaml
+
+# SSH Access (NOTE: happening before we default to DROP so we don't lose connection with Ansible)
+- include_tasks: ssh_allow.yaml
+
+# Default DROP
+- name: IPTABLES - Configure default DROP on tables
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-P INPUT DROP"
+  - "-P OUTPUT DROP"
+  - "-P FORWARD DROP"
+  become: true
+
+# Allowing lo to lo (local inter-process traffic)
+- include_tasks: interprocess.yaml
+
+# Outbound rules (from this machine)
+- include_tasks: outbound.yaml
+
+# Inbound rules (to this machine - excludes FORWARDING)
+- include_tasks: inbound.yaml
+
+# Forwarding anti-spoofing roles
+- include_tasks: forwarding-anti-spoof.yaml
+
+# Special Forwarding Chains from networks outbound to WAN
+- include_tasks: forwarding_net_to_wan.yaml
+
+# Include forwarding chains / global forwarding rules
+- include_tasks: forwarding.yaml
+
+# Include Forwarding Chains for traffic between intranet networks (non-WAN traffic forwarding)
+- include_tasks: forwarding_intranet.yaml

@@ -1,18 +1,24 @@
 ---
-- hosts: all
+- hosts: firewall
   become: true
   tasks:
     - debug: 
         var: ansible_os_family
 
+    - debug:
+        var: fw_dns_server
+    - debug:
+        var: fw_dhcp_server
+    - debug:
+        var: fw_ssh_from_wan_net_enabled
+
+    - include_role:
+        name: "netfacts"
 
 - hosts: firewall
   become: true
 
   tasks:
-    - set_fact:
-        role: "I'm a firewall!"
-
     - include_role:
         name: "iptables/rocky"
       when: ansible_os_family == "Rocky"
@@ -20,3 +26,29 @@
     - include_role:
         name: "iptables/debian"
       when: ansible_os_family == "Debian"
+
+    - include_role:
+        name: "iptables/rules"
+
+    - include_role:
+        name: "iptables/save"
+
+- hosts: firewall
+  become: true
+
+  tasks:
+    - include_role:
+        name: "dns/install"
+
+    - include_role:
+        name: "dns/config"
+
+- hosts: firewall
+  become: true
+
+  tasks:
+    - include_role:
+        name: "dhcpd/install"
+
+    - include_role:
+        name: "dhcpd/config"

@@ -1,0 +1,36 @@
+// Manage the file logs
+include "{{ bind_conf_dir }}/named.conf.log";
+
+zone "{{ fw_network_internal_domain }}" {
+        type master;
+        file "{{ bind_zone_dir }}/db.{{ fw_network_internal_domain }}.zone";
+        allow-update { key rndc-key; };
+};
+{% if fw_office_net_enabled %}
+zone "{{ fw_office_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }}" {
+        type master;
+        file "{{ bind_zone_dir }}/db.{{ fw_office_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }}zone";
+        allow-update { key rndc-key; };
+};
+{% endif %}
+{% if fw_server_net_enabled %}
+zone "{{ fw_server_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }}" {
+        type master;
+        file "{{ bind_zone_dir }}/db.{{ fw_server_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }}zone";
+        allow-update { key rndc-key; };
+};
+{% endif %}
+{% if fw_family_net_enabled %}
+zone "{{ fw_family_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }}" {
+        type master;
+        file "{{ bind_zone_dir }}/db.{{ fw_family_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }}zone";
+        allow-update { key rndc-key; };
+};
+{% endif %}
+{% if fw_dmz_net_enabled %}
+zone "{{ fw_dmz_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }}" {
+        type master;
+        file "{{ bind_zone_dir }}/db.{{ fw_dmz_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }}zone";
+        allow-update { key rndc-key; };
+};
+{% endif %}

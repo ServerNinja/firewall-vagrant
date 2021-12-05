@@ -1,0 +1,69 @@
+---
+- set_fact:
+    rndc_key_path: /etc/bind/rndc.key
+  when:
+  - ansible_os_family == "Debian"
+
+- set_fact:
+    rndc_key_path: /etc/rndc.key
+  when:
+  - ansible_os_family == "Rocky"
+
+- name: Create a symbolic link for rndc.key
+  ansible.builtin.file:
+    src: "{{ rndc_key_path }}"
+    dest: /etc/dhcp/rndc.key
+    owner: root
+    group: root
+    state: link
+  become: true
+
+- set_fact:
+    fw_dhcp_server_interfaces: "{{ fw_office_if }} {{ fw_dhcp_server_interfaces | default('') }}"
+  when: fw_office_net_dhcp
+
+- set_fact:
+    fw_dhcp_server_interfaces: "{{ fw_server_if }} {{ fw_dhcp_server_interfaces | default('') }}"
+  when: fw_server_net_dhcp
+  
+- set_fact:
+    fw_dhcp_server_interfaces: "{{ fw_family_if }} {{ fw_dhcp_server_interfaces | default('') }}"
+  when: fw_family_net_dhcp
+  
+- set_fact:
+    fw_dhcp_dmz_interfaces: "{{ fw_dmz_if }} {{ fw_dhcp_dmz_interfaces | default('') }}"
+  when: fw_dmz_net_dhcp
+
+- name: Configure interfaces for dhcp
+  ansible.builtin.lineinfile:
+    path: /etc/default/isc-dhcp-server
+    regexp: '^INTERFACESv4='
+    line: INTERFACESv4="{{ fw_dhcp_server_interfaces | default('') }}"
+  become: true
+  when: ansible_os_family == "Debian"
+
+- name: Render dhcpd.conf file
+  ansible.builtin.template:
+    src: ./templates/dhcpd.conf.j2
+    dest: /etc/dhcp/dhcpd.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  register: dhcpd_conf
+
+- name: Enable / (Re)Start isc-dhcp-server
+  ansible.builtin.systemd:
+    name: isc-dhcp-server
+    enabled: true
+    state: restarted
+  when: ansible_os_family == "Debian" and dhcpd_conf.changed
+  become: true
+
+- name: Enable / (Re)Start isc-dhcp-server
+  ansible.builtin.systemd:
+    name: dhcpd
+    enabled: true
+    state: restarted
+  when: ansible_os_family == "Rocky" and dhcpd_conf.changed
+  become: true

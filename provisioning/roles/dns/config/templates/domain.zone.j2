@@ -1,0 +1,13 @@
+$ORIGIN {{ fw_network_internal_domain }}. 
+$TTL    604800 ; 1 week
+@       IN      SOA     {{ ansible_hostname }}.{{ fw_network_internal_domain }}. root.{{ fw_network_internal_domain }}. (
+                     2006020201 ; Serial
+                         604800 ; Refresh
+                          86400 ; Retry
+                        2419200 ; Expire
+                         604800); Negative Cache TTL
+;
+@       IN      NS      {{ ansible_hostname }}
+        IN      A       {{ fw_server_address | default(fw_wan_address) }}
+{{ ansible_hostname }}     IN      A      {{ fw_server_address | default(fw_wan_address) }} 
+root     IN      A      {{ fw_server_address | default(fw_wan_address) }}

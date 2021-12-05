@@ -1,0 +1,93 @@
+log-facility local7;
+authoritative;
+
+{% if fw_dynamic_dns and fw_dns_server %}
+ddns-updates on;
+ddns-update-style standard;
+ddns-domainname "{{ fw_network_internal_domain }}";
+ddns-rev-domainname "in-addr.arpa";
+allow unknown-clients;
+
+include "{{ rndc_key_path }}";
+
+zone {{ fw_network_internal_domain }}. {  
+  primary {{ fw_office_address }};  
+  key rndc-key;  
+}  
+  {% if fw_office_net_dhcp and fw_office_net_enabled %}
+zone {{ fw_office_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }} {  
+  primary {{ fw_office_address }};  
+  key rndc-key;  
+}  
+  {% endif %}
+  {% if fw_server_net_dhcp and fw_server_net_enabled %}
+zone {{ fw_server_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }} {  
+  primary {{ fw_server_address }};  
+  key rndc-key;  
+}  
+  {% endif %}
+  {% if fw_family_net_dhcp and fw_family_net_enabled %}
+zone {{ fw_family_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }} {  
+  primary {{ fw_family_address }};  
+  key rndc-key;  
+}  
+  {% endif %}
+  {% if fw_dmz_net_dhcp and fw_dmz_net_enabled %}
+zone {{ fw_dmz_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }} {  
+  primary {{ fw_dmz_address }};  
+  key rndc-key;  
+}  
+  {% endif %}
+{% endif %}
+
+{% if fw_office_net_enabled %}
+subnet {{ fw_office_network }} netmask {{ fw_office_netmask }} {
+
+        range                           {{ fw_office_network | regex_replace('\\.[0-9]+$', '.' + (fw_office_net_dhcp_start | default('50'))) }} {{ fw_office_network | regex_replace('\\.[0-9]+$', '.' + (fw_office_net_dhcp_end | default('253'))) }};
+        option routers                  {{ fw_office_if }};
+        option subnet-mask              {{ fw_office_netmask }};
+        option domain-name-servers      {{ fw_office_address }};
+        option domain-name              "{{ fw_network_internal_domain }}";
+        default-lease-time 86400;
+        max-lease-time 86400;
+}
+{% endif %}
+
+{% if fw_server_net_enabled %}
+subnet {{ fw_server_network }} netmask {{ fw_server_netmask }} {
+
+        range                           {{ fw_server_network | regex_replace('\\.[0-9]+$', '.' + (fw_server_net_dhcp_start | default('50'))) }} {{ fw_server_network | regex_replace('\\.[0-9]+$', '.' + (fw_server_net_dhcp_end | default('253'))) }};
+        option routers                  {{ fw_server_if }};
+        option subnet-mask              {{ fw_server_netmask }};
+        option domain-name-servers      {{ fw_server_address }};
+        option domain-name              "{{ fw_network_internal_domain }}";
+        default-lease-time 86400;
+        max-lease-time 86400;
+}
+{% endif %}
+
+{% if fw_family_net_enabled %}
+subnet {{ fw_family_network }} netmask {{ fw_family_netmask }} {
+
+        range                           {{ fw_family_network | regex_replace('\\.[0-9]+$', '.' + (fw_family_net_dhcp_start | default('50'))) }} {{ fw_family_network | regex_replace('\\.[0-9]+$', '.' + (fw_family_net_dhcp_end | default('253'))) }};
+        option routers                  {{ fw_family_if }};
+        option subnet-mask              {{ fw_family_netmask }};
+        option domain-name-servers      {{ fw_family_address }};
+        option domain-name              "{{ fw_network_internal_domain }}";
+        default-lease-time 86400;
+        max-lease-time 86400;
+}
+{% endif %}
+
+{% if fw_dmz_net_enabled %}
+subnet {{ fw_dmz_network }} netmask {{ fw_dmz_netmask }} {
+
+        range                           {{ fw_dmz_network | regex_replace('\\.[0-9]+$', '.' + (fw_dmz_net_dhcp_start | default('50'))) }} {{ fw_dmz_network | regex_replace('\\.[0-9]+$', '.' + (fw_dmz_net_dhcp_end | default('253'))) }};
+        option routers                  {{ fw_dmz_if }};
+        option subnet-mask              {{ fw_dmz_netmask }};
+        option domain-name-servers      {{ fw_dmz_address }};
+        option domain-name              "{{ fw_network_internal_domain }}";
+        default-lease-time 86400;
+        max-lease-time 86400;
+}
+{% endif %}

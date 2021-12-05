@@ -43,6 +43,8 @@ There are three vboxnet networks that are "private" and not routable to each oth
 
 
 # Configuration
+NOTE: Most configuration needs should be met in the settings.yaml file. You may also use ansible provisioning to deploy configurations by setting `ansible_provisioning: true` in settings.yaml
+
 ## Networking
 NOTE: you may need to create three private networks in your virtualbox configuration: vboxnet1, vboxnet2, vboxnet3
 
@@ -53,6 +55,12 @@ in the `node_info` settings, you can configure the firewall (role: "firewall") w
 Using settings.yaml, you can add clients (role: "client") and place them on vboxnetX networks. You may configure them to use the IP address of the firewall as the default GW for the network it is on.
 
 Clients will run a script when the VMs are first built that will remove the default GW from eth0 and assign it to eth1. These nodes will not have access to the internet, however vagrant can still manage them through eth0.
+
+## Ansible
+The current ansible configuration will deploy the following components to Rocky linux, Ubuntu, and Debian:
+- Secure set of IPTables rules / configurations
+- Bind9 server
+- ISC DHCP server
 
 # Building out lab for simulation
 Run the following command to create the firewall and client VMs:

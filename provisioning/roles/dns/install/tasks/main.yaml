@@ -1,0 +1,24 @@
+---
+- name: Update repositories cache and install bind9 packages
+  apt:
+    name:
+    - bind9
+    - bind9utils
+    update_cache: yes
+  become: true
+  when:
+  - ansible_os_family == "Debian"
+  - fw_dns_server
+
+- name: Update repositories cache and install bind9 packages
+  yum:
+    name:
+    - bind
+    - bind-utils
+    - policycoreutils
+    - policycoreutils-python-utils
+    update_cache: yes
+  become: true
+  when:
+  - ansible_os_family == "Rocky"
+  - fw_dns_server

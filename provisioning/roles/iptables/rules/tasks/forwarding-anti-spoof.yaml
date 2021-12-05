@@ -1,0 +1,31 @@
+- name: IPTABLES - FORWARDING Office Net Anti-Spoofing Rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-A FORWARD -i {{ fw_office_if }} ! -s {{ fw_office_net_cidr }} -j LOG --log-prefix \"SPOOFED PKT OFFICE NET \""
+  - "-A FORWARD -i {{ fw_office_if }} ! -s {{ fw_office_net_cidr }} -j DROP"
+  when: fw_office_net_enabled
+  become: true
+
+- name: IPTABLES - FORWARDING Server Net Anti-Spoofing Rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-A FORWARD -i {{ fw_server_if }} ! -s {{ fw_server_net_cidr }} -j LOG --log-prefix \"SPOOFED PKT SERVER NET \""
+  - "-A FORWARD -i {{ fw_server_if }} ! -s {{ fw_server_net_cidr }} -j DROP"
+  when: fw_server_net_enabled
+  become: true
+
+- name: IPTABLES - FORWARDING Family Net Anti-Spoofing Rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-A FORWARD -i {{ fw_family_if }} ! -s {{ fw_family_net_cidr }} -j LOG --log-prefix \"SPOOFED PKT FAMILY NET \""
+  - "-A FORWARD -i {{ fw_family_if }} ! -s {{ fw_family_net_cidr }} -j DROP"
+  when: fw_family_net_enabled
+  become: true
+
+- name: IPTABLES - FORWARDING DMZ Net Anti-Spoofing Rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-A FORWARD -i {{ fw_dmz_if }} ! -s {{ fw_dmz_net_cidr }} -j LOG --log-prefix \"SPOOFED PKT DMZ NET \""
+  - "-A FORWARD -i {{ fw_dmz_if }} ! -s {{ fw_dmz_net_cidr }} -j DROP"
+  when: fw_dmz_net_enabled
+  become: true

@@ -1,0 +1,54 @@
+# Cration of chaings from * Net to * NET
+### Family <---> Server Net Rules
+- name: IPTABLES - FORWARDING FAMILY_TO_SERVER_NET_FORWARD Chain
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  ## Chain Creation
+  - "-N FAMILY_TO_SERVER_NET_FORWARD"
+  ## Allow ICMP
+  - "-A FAMILY_TO_SERVER_NET_FORWARD -p icmp --icmp-type echo-request -j ACCEPT"
+  ## Add Chain to FORWARD Chain
+  - "-A FORWARD -i {{ fw_family_if }} -s {{ fw_family_net_cidr }} -o {{ fw_server_if }} -d {{ fw_server_net_cidr }} -j FAMILY_TO_SERVER_NET_FORWARD"
+  when:
+  - fw_server_net_enabled
+  - fw_family_net_enabled
+  become: true
+
+- name: IPTABLES - FORWARDING SERVER_TO_FAMILY_NET_FORWARD Rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  ## Chain Creation
+  - "-N SERVER_TO_FAMILY_NET_FORWARD"
+  ## Add Chain to FORWARD Chain
+  - "-A FORWARD -i {{ fw_server_if }} -s {{ fw_server_net_cidr }} -o {{ fw_family_if }} -d {{ fw_family_net_cidr }} -j SERVER_TO_FAMILY_NET_FORWARD"
+  when:
+  - fw_server_net_enabled
+  - fw_family_net_enabled
+  become: true
+
+### Server <---> Office Net Rules
+- name: IPTABLES - FORWARDING SERVER_TO_OFFICE_NET_FORWARD Chain
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  ## Chain Creation
+  - "-N SERVER_TO_OFFICE_NET_FORWARD"
+  ## Add Chain to FORWARD Chain
+  - "-A FORWARD -i {{ fw_server_if }} -s {{ fw_server_net_cidr }} -o {{ fw_office_if }} -d {{ fw_office_net_cidr }} -j SERVER_TO_OFFICE_NET_FORWARD"
+  when:
+  - fw_server_net_enabled
+  - fw_office_net_enabled
+  become: true
+
+- name: IPTABLES - FORWARDING OFFICE_TO_SERVER_NET_FORWARD Chain
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  ## Chain Creation
+  - "-N OFFICE_TO_SERVER_NET_FORWARD"
+  ## Allow ICMP
+  - " -A OFFICE_TO_SERVER_NET_FORWARD -p icmp --icmp-type echo-request -j ACCEPT"
+  ## Add Chain to FORWARD Chain
+  - "-A FORWARD -i {{ fw_office_if }} -s {{ fw_office_net_cidr }} -o {{ fw_server_if }} -d {{ fw_server_net_cidr }} -j OFFICE_TO_SERVER_NET_FORWARD"
+  when:
+  - fw_server_net_enabled
+  - fw_office_net_enabled
+  become: true

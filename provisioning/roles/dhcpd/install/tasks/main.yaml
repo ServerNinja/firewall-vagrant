@@ -1,0 +1,15 @@
+---
+- name: Update repositories cache and install isc-dhcp-server packages
+  apt:
+    name:
+    - isc-dhcp-server
+    update_cache: yes
+  become: true
+  when: ansible_os_family == "Debian"
+
+- name: Update repositories cache and install isc-dhcp-server packages
+  yum:
+    name:
+    - dhcp-server
+  become: true
+  when: ansible_os_family == "Rocky"

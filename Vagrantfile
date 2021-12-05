@@ -94,13 +94,23 @@ SCRIPT
           ansible.verbose  = "vv"
           ansible.playbook = "provisioning/playbook.yml"
           ansible.galaxy_role_file = "provisioning/requirements.yaml"
+          ansible.galaxy_command = 'ansible-galaxy install --role-file=%{role_file} --roles-path=%{roles_path}'
           ansible.config_file = "provisioning/ansible.cfg"
 
           ansible.groups = {
-            "all:vars" => {
-              "deploy_user" => "vagrant",
-            },
-            "firewall" => ansibleFirewallGroup
+            "firewall" => ansibleFirewallGroup,
+          }
+          ansible.extra_vars = {
+            "fw_wan_if": "eth0",
+            "fw_office_if": "eth1",
+            "fw_server_if": "eth2",
+            "fw_family_if": "eth3",
+            "fw_dmz_if": "eth4",
+            "fw_dmz_enabled": false,
+            "fw_ssh_from_wan_net_enabled": true,
+            "fw_dhcp_server": true,
+            "fw_dns_server": true,
+            "fw_network_internal_domain": "reedfamilyninjas.local",
           }
         end
       end 

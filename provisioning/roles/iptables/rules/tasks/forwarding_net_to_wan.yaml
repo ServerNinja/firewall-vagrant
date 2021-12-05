@@ -1,0 +1,129 @@
+---
+# Cration of chaings from * Net to WAN
+- name: IPTABLES - FORWARDING OFFICE_NET_FORWARD Chain
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-N OFFICE_NET_FORWARD"
+  when: fw_office_net_enabled
+  become: true
+
+- name: IPTABLES - FORWARDING SERVER_NET_FORWARD Chain
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-N SERVER_NET_FORWARD"
+  when: fw_server_net_enabled
+  become: true
+
+- name: IPTABLES - FORWARDING FAMILY_NET_FORWARD Chain
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-N FAMILY_NET_FORWARD"
+  when: fw_family_net_enabled
+  become: true
+
+- name: IPTABLES - FORWARDING DMZ_NET_FORWARD Chain
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-N DMZ_NET_FORWARD"
+  when: fw_dmz_net_enabled
+  become: true
+
+- name: IPTABLES - FORWARDING OFFICE_NET_FORWARD basic rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  ## FTP
+  - "-A OFFICE_NET_FORWARD -p tcp --dport 21 -m conntrack --ctstate NEW -j ACCEPT"
+  ## SSH
+  - "-A OFFICE_NET_FORWARD -p tcp --dport 22 -m conntrack --ctstate NEW -j ACCEPT"
+  ## SMTP
+  - "-A OFFICE_NET_FORWARD -p tcp --dport 25 -m conntrack --ctstate NEW -j ACCEPT"
+  ## WHOIS
+  - "-A OFFICE_NET_FORWARD -p tcp --dport 43 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A OFFICE_NET_FORWARD -p tcp --dport 4321 -m conntrack --ctstate NEW -j ACCEPT"
+  ## HTTP(s) Traffic
+  - "-A OFFICE_NET_FORWARD -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A OFFICE_NET_FORWARD -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT"
+  ## DNS Queries
+  - "-A OFFICE_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A OFFICE_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
+  ## ICMP
+  - "-A OFFICE_NET_FORWARD -p icmp --icmp-type echo-request -j ACCEPT"
+  ## Traceroute Helper
+  - "-A OFFICE_NET_FORWARD -p udp --dport 33434:33626 -j ACCEPT"
+  when: fw_office_net_enabled
+  become: true
+
+- name: IPTABLES - FORWARDING SERVER_NET_FORWARD basic rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  ## FTP
+  - "-A SERVER_NET_FORWARD -p tcp --dport 21 -m conntrack --ctstate NEW -j ACCEPT"
+  ## SSH
+  - "-A SERVER_NET_FORWARD -p tcp --dport 22 -m conntrack --ctstate NEW -j ACCEPT"
+  ## SMTP
+  - "-A SERVER_NET_FORWARD -p tcp --dport 25 -m conntrack --ctstate NEW -j ACCEPT"
+  ## WHOIS
+  - "-A SERVER_NET_FORWARD -p tcp --dport 43 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A SERVER_NET_FORWARD -p tcp --dport 4321 -m conntrack --ctstate NEW -j ACCEPT"
+  ## HTTP(s) Traffic
+  - "-A SERVER_NET_FORWARD -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A SERVER_NET_FORWARD -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT"
+  ## DNS Queries
+  - "-A SERVER_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A SERVER_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
+  ## ICMP
+  - "-A SERVER_NET_FORWARD -p icmp --icmp-type echo-request -j ACCEPT"
+  ## Traceroute Helper
+  - "-A SERVER_NET_FORWARD -p udp --dport 33434:33626 -j ACCEPT"
+  when: fw_server_net_enabled
+  become: true
+
+- name: IPTABLES - FORWARDING FAMILY_NET_FORWARD basic rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  ## FTP
+  - "-A FAMILY_NET_FORWARD -p tcp --dport 21 -m conntrack --ctstate NEW -j ACCEPT"
+  ## SSH
+  - "-A FAMILY_NET_FORWARD -p tcp --dport 22 -m conntrack --ctstate NEW -j ACCEPT"
+  ## SMTP
+  - "-A FAMILY_NET_FORWARD -p tcp --dport 25 -m conntrack --ctstate NEW -j ACCEPT"
+  ## WHOIS
+  - "-A FAMILY_NET_FORWARD -p tcp --dport 43 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A FAMILY_NET_FORWARD -p tcp --dport 4321 -m conntrack --ctstate NEW -j ACCEPT"
+  ## HTTP(s) Traffic
+  - "-A FAMILY_NET_FORWARD -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A FAMILY_NET_FORWARD -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT"
+  ## DNS Queries
+  - "-A FAMILY_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A FAMILY_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
+  ## ICMP
+  - "-A FAMILY_NET_FORWARD -p icmp --icmp-type echo-request -j ACCEPT"
+  ## Traceroute Helper
+  - "-A FAMILY_NET_FORWARD -p udp --dport 33434:33626 -j ACCEPT"
+  when: fw_family_net_enabled
+  become: true
+
+- name: IPTABLES - FORWARDING DMZ_NET_FORWARD basic rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  ## FTP
+  - "-A DMZ_NET_FORWARD -p tcp --dport 21 -m conntrack --ctstate NEW -j ACCEPT"
+  ## SSH
+  - "-A DMZ_NET_FORWARD -p tcp --dport 22 -m conntrack --ctstate NEW -j ACCEPT"
+  ## SMTP
+  - "-A DMZ_NET_FORWARD -p tcp --dport 25 -m conntrack --ctstate NEW -j ACCEPT"
+  ## WHOIS
+  - "-A DMZ_NET_FORWARD -p tcp --dport 43 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A DMZ_NET_FORWARD -p tcp --dport 4321 -m conntrack --ctstate NEW -j ACCEPT"
+  ## HTTP(s) Traffic
+  - "-A DMZ_NET_FORWARD -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A DMZ_NET_FORWARD -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT"
+  ## DNS Queries
+  - "-A DMZ_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A DMZ_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
+  ## ICMP
+  - "-A DMZ_NET_FORWARD -p icmp --icmp-type echo-request -j ACCEPT"
+  ## Traceroute Helper
+  - "-A DMZ_NET_FORWARD -p udp --dport 33434:33626 -j ACCEPT"
+  when: fw_dmz_net_enabled
+  become: true

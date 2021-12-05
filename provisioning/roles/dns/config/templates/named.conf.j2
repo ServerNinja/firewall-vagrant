@@ -1,0 +1,19 @@
+// Managing acls
+acl internals { {{ dns_acl }} };
+
+// Load options
+include "{{ bind_conf_dir }}/named.conf.options";
+
+// TSIG key used for the dynamic update
+include "{{ rndc_key_path }}";
+
+// Configure the communication channel for Administrative BIND9 with rndc
+// By default, they key is in the rndc.key file and is used by rndc and bind9 
+// on the localhost
+controls {
+        inet 127.0.0.1 port 953 
+             allow { 127.0.0.1; } keys { "rndc-key"; };
+};
+
+include "{{ default_zones_file }}";
+include "{{ bind_conf_dir }}/named.conf.local";

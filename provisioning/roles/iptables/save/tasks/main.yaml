@@ -1,0 +1,33 @@
+---
+- set_fact:
+    iptables_save_location: /etc/iptables/rules.v4
+    ip6tables_save_location: /etc/iptables/rules.v6
+  when: ansible_os_family == "Debian"
+
+- name: Save current state of the firewall - RHEL (IPv4)
+  shell: /usr/libexec/iptables/iptables.init save
+  become: true
+  when: ansible_os_family == "Rocky"
+
+#- name: Save current state of the firewall - RHEL (IPv6)
+#  shell: /usr/libexec/iptables/ip6tables.init save
+#  become: true
+#  when: ansible_os_family == "Rocky"
+
+- name: Save current state of the firewall - Debian (IPv4)
+  community.general.iptables_state:
+    ip_version: ipv4
+    table: filter
+    state: saved
+    path: "{{ iptables_save_location }}"
+  when: ansible_os_family == "Debian"
+  become: true
+
+#- name: Save current state of the firewall - Debian (IPv6)
+#  community.general.iptables_state:
+#    ip_version: ipv6
+#    table: filter
+#    state: saved
+#    path: "{{ ip6tables_save_location }}"
+#  when: ansible_os_family == "Debian"
+#  become: true
