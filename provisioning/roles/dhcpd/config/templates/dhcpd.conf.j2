@@ -8,7 +8,7 @@ ddns-domainname "{{ fw_network_internal_domain }}";
 ddns-rev-domainname "in-addr.arpa";
 allow unknown-clients;
 
-include "{{ rndc_key_path }}";
+include "/etc/dhcp/rndc.key";
 
 zone {{ fw_network_internal_domain }}. {  
   primary {{ fw_office_address }};  

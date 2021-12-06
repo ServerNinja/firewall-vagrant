@@ -13,7 +13,7 @@
   - ansible_os_family == "Debian"
 
 - set_fact:
-    rndc_key_path: /etc/rndc.key
+    rndc_key_path: /etc/named/rndc.key
     rndc_conf_path: /etc/rndc.conf
     bind_conf_path: /etc
     bind_conf_dir: /etc/named
@@ -35,20 +35,6 @@
   become: true
 
 - stat:
-    path: "{{ bind_cache_dir }}"
-  register: cache_dir
-  become: true
-
-- file:
-    state: directory
-    path: "{{ bind_cache_dir }}"
-    owner: "{{ bind_user }}"
-    group: "{{ bind_group }}"
-    mode: 0755
-  become: true
-  when: not cache_dir.stat.exists
-
-- stat:
     path: "{{ rndc_conf_path }}"
   register: rndc_conf
   when:
@@ -57,34 +43,13 @@
   - fw_dns_server
   become: true
 
-- stat:
-    path: "{{ bind_zone_dir }}"
-  register: zone_dir
-  become: true
-
-- file:
-    state: directory
-    path: "{{ bind_zone_dir }}"
-    owner: "{{ bind_user }}"
-    group: "{{ bind_group }}"
-    mode: 0755
-  become: true
-  when: not zone_dir.stat.exists
-
 - name: Generate new rndc.key
-  shell: rndc-confgen -a -b 512
+  shell: rndc-confgen -a -b 512 -c {{ rndc_key_path }}
   when:
   - fw_dynamic_dns
   - fw_dhcp_server
   - fw_dns_server
   - not rndc_key.stat.exists or not rndc_conf.stat.exists
-  become: true
-
-- file:
-    state: file
-    path: "{{ rndc_key_path }}"
-    owner: "{{ bind_user }}"
-    group: "{{ bind_group }}"
   become: true
 
 - name: Get content of newly generated rndc.key file
@@ -115,6 +80,41 @@
   - fw_dns_server
   - not rndc_key.stat.exists or not rndc_conf.stat.exists
   become: true
+
+- file:
+    state: file
+    path: "{{ rndc_key_path }}"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+  become: true
+
+- stat:
+    path: "{{ bind_zone_dir }}"
+  register: zone_dir
+  become: true
+
+- file:
+    state: directory
+    path: "{{ bind_zone_dir }}"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode: 0755
+  become: true
+  when: not zone_dir.stat.exists
+
+- stat:
+    path: "{{ bind_cache_dir }}"
+  register: cache_dir
+  become: true
+
+- file:
+    state: directory
+    path: "{{ bind_cache_dir }}"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode: 0755
+  become: true
+  when: not cache_dir.stat.exists
 
 - set_fact:
     dns_acl: "{{ fw_office_net_cidr }}; {{ dns_acl | default('127.0.0.0/8;') }}"
@@ -367,6 +367,8 @@
     mode: '0644'
   become: true
   register: named_service_file
+  when:
+  - ansible_os_family == "Debian"
 
 - name: Enable / (Re)Start bind9 service
   ansible.builtin.systemd:
@@ -374,5 +376,15 @@
     enabled: true
     state: restarted
   when: 
+  - ansible_os_family == "Debian"
   - named_service_file.changed or apparmor_config_file.changed or apparmor_named_file.changed
+  become: true
+
+- name: Enable / (Re)Start named service
+  ansible.builtin.systemd:
+    name: named.service
+    enabled: true
+    state: restarted
+  when: 
+  - ansible_os_family == "Rocky"
   become: true

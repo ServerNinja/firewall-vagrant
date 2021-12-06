@@ -1,21 +1,31 @@
 ---
 - set_fact:
-    rndc_key_path: /etc/bind/rndc.key
-  when:
-  - ansible_os_family == "Debian"
-
-- set_fact:
-    rndc_key_path: /etc/rndc.key
+    rndc_key_path: /etc/named/rndc.key
+    rndc_conf_path: /etc/rndc.conf
+    bind_user: named
+    bind_group: named
+    dhcp_user: dhcpd
+    dhcp_group: dhcpd
   when:
   - ansible_os_family == "Rocky"
 
+- set_fact:
+    rndc_key_path: /etc/bind/rndc.key
+    bind_user: bind
+    bind_group: bind
+    dhcp_user: root
+    dhcp_group: root
+  when:
+  - ansible_os_family == "Debian"
+
 - name: Create a symbolic link for rndc.key
-  ansible.builtin.file:
+  copy:
     src: "{{ rndc_key_path }}"
     dest: /etc/dhcp/rndc.key
-    owner: root
-    group: root
-    state: link
+    owner: "{{ dhcp_user }}"
+    group: "{{ dhcp_group }}"
+    mode: '0600'
+    remote_src: true
   become: true
 
 - set_fact:
