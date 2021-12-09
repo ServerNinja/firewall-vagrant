@@ -40,11 +40,11 @@ zone {{ fw_dmz_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }} {
   {% endif %}
 {% endif %}
 
-{% if fw_office_net_enabled %}
+{% if fw_office_net_enabled and fw_office_net_dhcp %}
 subnet {{ fw_office_network }} netmask {{ fw_office_netmask }} {
 
         range                           {{ fw_office_network | regex_replace('\\.[0-9]+$', '.' + (fw_office_net_dhcp_start | default('50'))) }} {{ fw_office_network | regex_replace('\\.[0-9]+$', '.' + (fw_office_net_dhcp_end | default('253'))) }};
-        option routers                  {{ fw_office_if }};
+        option routers                  {{ fw_office_address }};
         option subnet-mask              {{ fw_office_netmask }};
         option domain-name-servers      {{ fw_office_address }};
         option domain-name              "{{ fw_network_internal_domain }}";
@@ -53,11 +53,11 @@ subnet {{ fw_office_network }} netmask {{ fw_office_netmask }} {
 }
 {% endif %}
 
-{% if fw_server_net_enabled %}
+{% if fw_server_net_enabled and fw_server_net_dhcp %}
 subnet {{ fw_server_network }} netmask {{ fw_server_netmask }} {
 
         range                           {{ fw_server_network | regex_replace('\\.[0-9]+$', '.' + (fw_server_net_dhcp_start | default('50'))) }} {{ fw_server_network | regex_replace('\\.[0-9]+$', '.' + (fw_server_net_dhcp_end | default('253'))) }};
-        option routers                  {{ fw_server_if }};
+        option routers                  {{ fw_server_address }};
         option subnet-mask              {{ fw_server_netmask }};
         option domain-name-servers      {{ fw_server_address }};
         option domain-name              "{{ fw_network_internal_domain }}";
@@ -66,11 +66,11 @@ subnet {{ fw_server_network }} netmask {{ fw_server_netmask }} {
 }
 {% endif %}
 
-{% if fw_family_net_enabled %}
+{% if fw_family_net_enabled and fw_family_net_dhcp %}
 subnet {{ fw_family_network }} netmask {{ fw_family_netmask }} {
 
         range                           {{ fw_family_network | regex_replace('\\.[0-9]+$', '.' + (fw_family_net_dhcp_start | default('50'))) }} {{ fw_family_network | regex_replace('\\.[0-9]+$', '.' + (fw_family_net_dhcp_end | default('253'))) }};
-        option routers                  {{ fw_family_if }};
+        option routers                  {{ fw_family_address }};
         option subnet-mask              {{ fw_family_netmask }};
         option domain-name-servers      {{ fw_family_address }};
         option domain-name              "{{ fw_network_internal_domain }}";
@@ -79,11 +79,11 @@ subnet {{ fw_family_network }} netmask {{ fw_family_netmask }} {
 }
 {% endif %}
 
-{% if fw_dmz_net_enabled %}
+{% if fw_dmz_net_enabled and fw_dmz_net_dhcp %}
 subnet {{ fw_dmz_network }} netmask {{ fw_dmz_netmask }} {
 
         range                           {{ fw_dmz_network | regex_replace('\\.[0-9]+$', '.' + (fw_dmz_net_dhcp_start | default('50'))) }} {{ fw_dmz_network | regex_replace('\\.[0-9]+$', '.' + (fw_dmz_net_dhcp_end | default('253'))) }};
-        option routers                  {{ fw_dmz_if }};
+        option routers                  {{ fw_dmz_address }};
         option subnet-mask              {{ fw_dmz_netmask }};
         option domain-name-servers      {{ fw_dmz_address }};
         option domain-name              "{{ fw_network_internal_domain }}";
