@@ -15,6 +15,16 @@
   - "-A LO-INPUT-LO -p udp --dport 53 -m state --state NEW -j ACCEPT"
   become: true
 
+- name: IPTABLES - LO / Inter-process Ports - Fix issue with ssh logins
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  ## DNS Queries...
+  - "-A LO-OUTPUT-LO -p tcp --dport 9050 -m state --state NEW -j ACCEPT"
+  - "-A LO-INPUT-LO -p tcp --dport 9050 -m state --state NEW -j ACCEPT"
+  - "-A LO-OUTPUT-LO -p tcp --dport 9051 -m state --state NEW -j ACCEPT"
+  - "-A LO-INPUT-LO -p tcp --dport 9051 -m state --state NEW -j ACCEPT"
+  become: true
+
 - name: IPTABLES - LO / Inter-process Ports - iscp-dhcp-server to named dynamic updates
   ansible.builtin.shell: "iptables {{ item }}"
   with_items:

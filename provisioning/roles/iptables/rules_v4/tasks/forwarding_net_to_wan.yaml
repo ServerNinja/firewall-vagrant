@@ -42,7 +42,9 @@
   - "-A OFFICE_NET_FORWARD -p tcp --dport 4321 -m conntrack --ctstate NEW -j ACCEPT"
   ## HTTP(s) Traffic
   - "-A OFFICE_NET_FORWARD -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A OFFICE_NET_FORWARD -p tcp --dport 8080 -m conntrack --ctstate NEW -j ACCEPT"
   - "-A OFFICE_NET_FORWARD -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A OFFICE_NET_FORWARD -p tcp --dport 8443 -m conntrack --ctstate NEW -j ACCEPT"
   ## DNS Queries
   - "-A OFFICE_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
   - "-A OFFICE_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
@@ -68,6 +70,8 @@
   ## HTTP(s) Traffic
   - "-A SERVER_NET_FORWARD -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT"
   - "-A SERVER_NET_FORWARD -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A SERVER_NET_FORWARD -p tcp --dport 8080 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A SERVER_NET_FORWARD -p tcp --dport 8443 -m conntrack --ctstate NEW -j ACCEPT"
   ## DNS Queries
   - "-A SERVER_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
   - "-A SERVER_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
@@ -93,6 +97,8 @@
   ## HTTP(s) Traffic
   - "-A FAMILY_NET_FORWARD -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT"
   - "-A FAMILY_NET_FORWARD -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A FAMILY_NET_FORWARD -p tcp --dport 8080 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A FAMILY_NET_FORWARD -p tcp --dport 8443 -m conntrack --ctstate NEW -j ACCEPT"
   ## DNS Queries
   - "-A FAMILY_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
   - "-A FAMILY_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
@@ -118,6 +124,8 @@
   ## HTTP(s) Traffic
   - "-A DMZ_NET_FORWARD -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT"
   - "-A DMZ_NET_FORWARD -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A DMZ_NET_FORWARD -p tcp --dport 8080 -m conntrack --ctstate NEW -j ACCEPT"
+  - "-A DMZ_NET_FORWARD -p tcp --dport 8443 -m conntrack --ctstate NEW -j ACCEPT"
   ## DNS Queries
   - "-A DMZ_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"
   - "-A DMZ_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT"

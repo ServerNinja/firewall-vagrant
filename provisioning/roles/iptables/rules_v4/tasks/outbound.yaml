@@ -17,7 +17,9 @@
   ansible.builtin.shell: "iptables {{ item }}"
   with_items:
   - "-A OUTPUT -p tcp --dport 443 --syn -m state --state NEW -j ACCEPT"
+  - "-A OUTPUT -p tcp --dport 8443 --syn -m state --state NEW -j ACCEPT"
   - "-A OUTPUT -p tcp --dport 80 --syn -m state --state NEW -j ACCEPT"
+  - "-A OUTPUT -p tcp --dport 8080 --syn -m state --state NEW -j ACCEPT"
   when: fw_outbound_http | default(true)
   become: true
 

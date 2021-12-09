@@ -1,8 +1,35 @@
+// Bind 9 Reference: https://bind9.readthedocs.io/en/latest/reference.html
+
+// RFC1918 space and some reserved space, which is
+// commonly used in spoofing attacks.
+acl bogusnets {
+    0.0.0.0/8;  192.0.2.0/24; 224.0.0.0/3;
+    10.0.0.0/8; 172.16.0.0/12; 192.168.0.0/16;
+};
+
+acl internal-nets {
+    {% if fw_office_net_enabled %}{{ fw_office_net_cidr }};{% endif %}
+    {% if fw_server_net_enabled %}{{ fw_server_net_cidr }};{% endif %}
+    {% if fw_family_net_enabled %}{{ fw_family_net_cidr }};{% endif %}
+    {% if fw_dmz_net_enabled %}{{ fw_dmz_net_cidr }};{% endif %}
+};
+
+acl fw-interfaces {
+    {% if fw_office_net_enabled %}{{ fw_office_address }};{% endif %}
+    {% if fw_server_net_enabled %}{{ fw_server_address }};{% endif %}
+    {% if fw_family_net_enabled %}{{ fw_family_address }};{% endif %}
+    {% if fw_dmz_net_enabled %}{{ fw_dmz_address }};{% endif %}
+};
+
 options {
         directory "{{ bind_cache_dir }}";
 
         // Exchange port between DNS servers
         query-source address * port *;
+
+        // filter out AAAA queries
+        filter-aaaa-on-v4 yes;
+        filter-aaaa { 127.0.0.1; internal-nets; };
 
         // Transmit requests if
         // this server doesn't know how to resolve them
@@ -16,24 +43,36 @@ options {
 
         // From 9.9.5 ARM, disables interfaces scanning to prevent unwanted stop listening
         interface-interval 0;
+
         // Listen on local interfaces only(IPV4)
         listen-on-v6 { none; };
         listen-on { 
-            127.0.0.1;
-            {% if fw_office_net_enabled %}{{ fw_office_address }};{% endif %}
-            {% if fw_server_net_enabled %}{{ fw_server_address }};{% endif %}
-            {% if fw_family_net_enabled %}{{ fw_family_address }};{% endif %}
-            {% if fw_dmz_net_enabled %}{{ fw_dmz_address }};{% endif %}
+            127.0.0.1; fw-interfaces;
          };
 
-        // Do not transfer the zone information to the secondary DNS
+        // Do not transfer the zone information
         allow-transfer { none; };
 
-        // Accept requests for internal network only
-        allow-query { internals; };
+        // Allow queries
+        allow-query {
+            127.0.0.1; internal-nets;
+         };
 
-        // Allow recursive queries to the local hosts
-        allow-recursion { internals; };
+        // Allow recursion
+        allow-recursion {
+            127.0.0.1; internal-nets;
+         };
+         
+        // Allow cached queries
+        allow-query-cache {
+            127.0.0.1; internal-nets;
+         };
+
+         // Blackhole queries from all RFC1918 and reserved space except for 
+         // matching internal-nets
+         blackhole {
+            ! internal-nets; bogusnets;
+         };
 
         // Do not make public version of BIND
         version none;
