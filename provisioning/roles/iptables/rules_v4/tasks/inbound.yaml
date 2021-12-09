@@ -12,7 +12,7 @@
   ansible.builtin.shell: "iptables {{ item }}"
   with_items:
   - "-A INPUT -p udp -i {{ fw_office_if }} -s {{ fw_office_net_cidr }} --dport 67 -m state --state NEW -j ACCEPT"
-  when: fw_dhcp_server and fw_office_net_enabled
+  when: fw_dhcp_server and fw_office_net_enabled and fw_office_net_dhcp
   become: true
 
 - name: IPTABLES - INBOUND from Office Net - ICMP
@@ -42,7 +42,7 @@
   ansible.builtin.shell: "iptables {{ item }}"
   with_items:
   - "-A INPUT -p udp -i {{ fw_server_if }} -s {{ fw_server_net_cidr }} --dport 67 -m state --state NEW -j ACCEPT"
-  when: fw_dhcp_server and fw_server_net_enabled
+  when: fw_dhcp_server and fw_server_net_enabled and fw_server_net_dhcp
   become: true
 
 - name: IPTABLES - INBOUND from Server Net - ICMP
@@ -72,7 +72,7 @@
   ansible.builtin.shell: "iptables {{ item }}"
   with_items:
   - "-A INPUT -p udp -i {{ fw_family_if }} -s {{ fw_family_net_cidr }} --dport 67 -m state --state NEW -j ACCEPT"
-  when: fw_dhcp_server and fw_family_net_enabled
+  when: fw_dhcp_server and fw_family_net_enabled and fw_family_net_dhcp
   become: true
 
 - name: IPTABLES - INBOUND from Family Net - ICMP
@@ -102,7 +102,7 @@
   ansible.builtin.shell: "iptables {{ item }}"
   with_items:
   - "-A INPUT -p udp -i {{ fw_dmz_if }} -s {{ fw_dmz_net_cidr }} --dport 67 -m state --state NEW -j ACCEPT"
-  when: fw_dhcp_server and fw_dmz_net_enabled
+  when: fw_dhcp_server and fw_dmz_net_enabled and fw_dmz_net_dhcp
   become: true
 
 - name: IPTABLES - INBOUND from DMZ Net - ICMP

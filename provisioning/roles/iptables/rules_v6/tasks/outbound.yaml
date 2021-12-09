@@ -1,28 +1,28 @@
 ---
-- name: IPTABLES - OUTBOUND FTP
-  ansible.builtin.shell: "iptables {{ item }}"
+- name: IP6TABLES - OUTBOUND FTP
+  ansible.builtin.shell: "ip6tables {{ item }}"
   with_items:
   - "-A OUTPUT -p tcp --dport 21 --syn -m state --state NEW -j ACCEPT"
   when: fw_outbound_ftp | default(true)
   become: true
 
-- name: IPTABLES - OUTBOUND SMTP
-  ansible.builtin.shell: "iptables {{ item }}"
+- name: IP6TABLES - OUTBOUND SMTP
+  ansible.builtin.shell: "ip6tables {{ item }}"
   with_items:
   - "-A OUTPUT -p tcp --dport 25 --syn -m state --state NEW -j ACCEPT"
   when: fw_outbound_smtp | default(true)
   become: true
 
-- name: IPTABLES - OUTBOUND HTTP 
-  ansible.builtin.shell: "iptables {{ item }}"
+- name: IP6TABLES - OUTBOUND HTTP 
+  ansible.builtin.shell: "ip6tables {{ item }}"
   with_items:
   - "-A OUTPUT -p tcp --dport 443 --syn -m state --state NEW -j ACCEPT"
   - "-A OUTPUT -p tcp --dport 80 --syn -m state --state NEW -j ACCEPT"
   when: fw_outbound_http | default(true)
   become: true
 
-- name: IPTABLES - OUTBOUND DNS Queries
-  ansible.builtin.shell: "iptables {{ item }}"
+- name: IP6TABLES - OUTBOUND DNS Queries
+  ansible.builtin.shell: "ip6tables {{ item }}"
   with_items:
   ## DNS Queries...
   - "-A OUTPUT -p udp -m udp --dport 53 -m state --state NEW -j ACCEPT"
@@ -33,33 +33,25 @@
   when: fw_outbound_dns | default(true)
   become: true
 
-- name: IPTABLES - OUTBOUND ICMP Rquest
-  ansible.builtin.shell: "iptables {{ item }}"
+- name: IP6TABLES - OUTBOUND DHCP Queries
+  ansible.builtin.shell: "ip6tables {{ item }}"
   with_items:
-  - "-A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT"
+  ## DNS Queries...
+  - "-A OUTPUT -p udp -m udp --dport 67 -m state --state NEW -j ACCEPT"
+  - "-A OUTPUT -p tcp -m tcp --dport 67 -m state --state NEW -j ACCEPT"
+  when: fw_outbound_dhcp | default(true)
+  become: true
+
+- name: IP6TABLES - OUTBOUND ICMP Rquest
+  ansible.builtin.shell: "ip6tables {{ item }}"
+  with_items:
+  - "-A OUTPUT -p icmpv6 --icmpv6-type echo-request -j ACCEPT"
   when: fw_outbound_icmp_req | default(true)
   become: true
 
-# Output rules from localhost
-#-A OUTPUT -o lo -j LO-OUTPUT-LO
-
-# Allow helper ports for traceroutes
-- name: IPTABLES - OUTBOUND Traceroutes
-  ansible.builtin.shell: "iptables {{ item }}"
-  with_items:
-  - "-A OUTPUT -p udp --dport 33434:33626 -j ACCEPT"
-  when: fw_outbound_traceroutes | default(true)
-  become: true
-
-- name: IPTABLES - OUTBOUND Interprocess Chain
-  ansible.builtin.shell: "iptables {{ item }}"
-  with_items:
-  - "-A OUTPUT -o lo -j LO-OUTPUT-LO"
-  become: true
-
 # Default OUTPUT log rule
-- name: IPTABLES - OUTBOUND Log DROPs Rule
-  ansible.builtin.shell: "iptables {{ item }}"
+- name: IP6TABLES - OUTBOUND Log DROPs Rule
+  ansible.builtin.shell: "ip6tables {{ item }}"
   with_items:
   - "-A OUTPUT -o '!lo' -j LOG --log-prefix \"DROP \" --log-ip-options --log-tcp-options"
   become: true
