@@ -16,8 +16,8 @@ node_info:
       #vagrant_guest_os: "openbsd"
       #vagrant_box: "bento/debian-11.1" # AppArmor sucks and SELinux breaks debian - WTF?!?!
       #vagrant_guest_os: "debian"
-      vagrant_box: "rockylinux/8"
-      vagrant_guest_os: "rocky"
+      #vagrant_box: "rockylinux/8"
+      #vagrant_guest_os: "rocky"
       memory: 1024       # <=== Default to 1024 if not defined
       cpus: 1            # <=== Default to 1 if not defined
       role: firewall
