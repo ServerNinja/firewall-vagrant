@@ -127,6 +127,17 @@
   become: true
 
 ## Inbound Rules from WAN Go Here:
+- name: IPTABLES - INBOUND rules - User Defined
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items: "{{ fw_iptables_extra_inbound_rules }}"
+  become: true
+
+### IPSET - Blocking IPs from WAN
+- name: IPTABLES - INBOUND block with IPSET
+  ansible.builtin.shell: "iptables -A INPUT -m set --match-set {{ item.name }} src -j DROP"
+  with_items: "{{ fw_ipset_iblock_blocklists }}"
+  when: fw_ipset_enabled
+  become: true
 
 ## Default OUTPUT log rule
 - name: IPTABLES - INBOUND Log DROPs Rule

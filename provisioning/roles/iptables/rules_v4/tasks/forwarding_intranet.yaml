@@ -52,3 +52,52 @@
   - fw_server_net_enabled
   - fw_office_net_enabled
   become: true
+
+- name: IPTABLES - FORWARDING FAMILY_NET_FORWARD PRINTER rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-N PRINTER-FAMILY-TO-SERVER"
+  - "-A FAMILY_TO_SERVER_NET_FORWARD -j PRINTER-FAMILY-TO-SERVER"
+  when: fw_family_net_enabled and fw_server_net_enabled and fw_printer_hosts | default([]) |length > 0
+  become: true
+
+- name: IPTABLES - FORWARDING FAMILY_NET_FORWARD PRINTER rules
+  ansible.builtin.shell: "iptables {{ item.0 }} -d {{ item.1.ip }} -i {{ fw_family_if }} -s {{ fw_family_net_cidr }} -j ACCEPT"
+  with_nested:
+      # Network scanning
+  - - "-A PRINTER-FAMILY-TO-SERVER -p udp --dport 54925"
+      # Network printing 
+    - "-A PRINTER-FAMILY-TO-SERVER -p udp --dport 137"
+      # IPP Network printing 
+    - "-A PRINTER-FAMILY-TO-SERVER -p tcp --dport 631"
+  - "{{ fw_printer_hosts }}"
+  when: fw_family_net_enabled and fw_server_net_enabled and fw_printer_hosts | default([]) |length > 0
+  become: true
+
+- name: IPTABLES - FORWARDING OFFICE_NET_FORWARD PRINTER rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-N PRINTER-OFFICE-TO-SERVER"
+  - "-A OFFICE_TO_SERVER_NET_FORWARD -j PRINTER-OFFICE-TO-SERVER"
+  when: fw_office_net_enabled and fw_server_net_enabled and fw_printer_hosts | default([]) |length > 0
+  become: true
+
+- name: IPTABLES - FORWARDING OFFICE_NET_FORWARD PRINTER rules
+  ansible.builtin.shell: "iptables {{ item.0 }} -d {{ item.1.ip }} -i {{ fw_office_if }} -s {{ fw_office_net_cidr }} -j ACCEPT"
+  with_nested:
+      # Network scanning
+  - - "-A PRINTER-OFFICE-TO-SERVER -p udp --dport 54925"
+      # Network printing 
+    - "-A PRINTER-OFFICE-TO-SERVER -p udp --dport 137"
+      # IPP Network printing 
+    - "-A PRINTER-OFFICE-TO-SERVER -p tcp --dport 631"
+  - "{{ fw_printer_hosts }}"
+  when: fw_office_net_enabled and fw_server_net_enabled and fw_printer_hosts | default([]) |length > 0
+  become: true
+
+- name: IPTABLES - FORWARDING SERVER NET Services to FAMILY rules
+  ansible.builtin.shell: "iptables -A FAMILY_TO_SERVER_NET_FORWARD -p {{ item.protocol}} --dport {{ item.port }} -d {{ item.ip }} -i {{ fw_family_if }} -s {{ fw_family_net_cidr }} -j ACCEPT -m comment --comment \"Server Net SVC: {{ item.name }}\""
+  with_items:
+  - "{{ fw_server_net_services }}"
+  when: fw_family_net_enabled and fw_server_net_enabled and fw_server_net_services | default([]) |length > 0
+  become: true

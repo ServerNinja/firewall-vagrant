@@ -135,3 +135,40 @@
   - "-A DMZ_NET_FORWARD -p udp --dport 33434:33626 -j ACCEPT"
   when: fw_dmz_net_enabled
   become: true
+
+- name: IPTABLES - FORWARDING FAMILY_NET_FORWARD XBOX rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-N XBOX-TO-WAN"
+  - "-A FAMILY_NET_FORWARD -j XBOX-TO-WAN"
+  when: fw_family_net_enabled and fw_xbox_hosts | default([]) |length > 0
+  become: true
+
+- name: IPTABLES - FORWARDING FAMILY_NET_FORWARD XBOX rules
+  ansible.builtin.shell: "iptables {{ item.0 }} -s {{ item.1.ip }} -j ACCEPT"
+  with_nested:
+  - - "-A XBOX-TO-WAN -p udp --dport 88"
+    - "-A XBOX-TO-WAN -p udp --dport 500"
+    - "-A XBOX-TO-WAN -p udp --dport 3074"
+    - "-A XBOX-TO-WAN -p tcp --dport 3074"
+    - "-A XBOX-TO-WAN -p udp --dport 3544"
+    - "-A XBOX-TO-WAN -p udp --dport 4500"
+  - "{{ fw_xbox_hosts }}"
+  when: fw_family_net_enabled and fw_xbox_hosts | default([]) |length > 0
+  become: true
+
+- name: IPTABLES - FORWARDING FAMILY_NET_FORWARD CHROMECAST rules
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-N CHROMECAST-TO-WAN"
+  - "-A FAMILY_NET_FORWARD -j CHROMECAST-TO-WAN"
+  when: fw_family_net_enabled and fw_chromecast_hosts | default([]) |length > 0
+  become: true
+
+- name: IPTABLES - FORWARDING FAMILY_NET_FORWARD CHROMECAST rules
+  ansible.builtin.shell: "iptables {{ item.0 }} -s {{ item.1.ip }} -j ACCEPT"
+  with_nested:
+  - - "-A CHROMECAST-TO-WAN -p tcp --dport 8008:8009"
+  - "{{ fw_chromecast_hosts }}"
+  when: fw_family_net_enabled and fw_chromecast_hosts | default([]) |length > 0
+  become: true

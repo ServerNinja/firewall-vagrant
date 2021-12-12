@@ -21,21 +21,47 @@
 
   tasks:
     - include_role:
+        name: ipset/install
+      when: 
+      - fw_ipset_enabled | default(true)
+      - fw_iptables_enabled | default(true)
+
+    - include_role:
+        name: ipset/config
+      when: 
+      - fw_ipset_enabled | default(true)
+      - fw_iptables_enabled | default(true)
+
+- hosts: firewall
+  become: true
+
+  tasks:
+    - include_role:
         name: "iptables/rocky"
-      when: ansible_os_family == "Rocky"
+      when: 
+      - ansible_os_family == "Rocky"
+      - fw_iptables_enabled | default(true)
 
     - include_role:
         name: "iptables/debian"
-      when: ansible_os_family == "Debian"
+      when:
+      - ansible_os_family == "Debian"
+      - fw_iptables_enabled | default(true)
 
     - include_role:
         name: "iptables/rules_v4"
+      when:
+      - fw_iptables_enabled | default(true)
     
     - include_role:
         name: "iptables/rules_v6"
+      when:
+      - fw_iptables_enabled | default(true)
 
     - include_role:
         name: "iptables/save"
+      when:
+      - fw_iptables_enabled | default(true)
 
 - hosts: firewall
   become: true

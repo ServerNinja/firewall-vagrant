@@ -14,25 +14,25 @@ zone {{ fw_network_internal_domain }}. {
   primary {{ fw_office_address }};  
   key rndc-key;  
 }  
-  {% if fw_office_net_dhcp and fw_office_net_enabled %}
+  {%- if fw_office_net_dhcp and fw_office_net_enabled -%}
 zone {{ fw_office_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }} {  
   primary {{ fw_office_address }};  
   key rndc-key;  
 }  
   {% endif %}
-  {% if fw_server_net_dhcp and fw_server_net_enabled %}
+  {%- if fw_server_net_dhcp and fw_server_net_enabled -%}
 zone {{ fw_server_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }} {  
   primary {{ fw_server_address }};  
   key rndc-key;  
 }  
   {% endif %}
-  {% if fw_family_net_dhcp and fw_family_net_enabled %}
+  {%- if fw_family_net_dhcp and fw_family_net_enabled -%}
 zone {{ fw_family_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }} {  
   primary {{ fw_family_address }};  
   key rndc-key;  
 }  
   {% endif %}
-  {% if fw_dmz_net_dhcp and fw_dmz_net_enabled %}
+  {%- if fw_dmz_net_dhcp and fw_dmz_net_enabled -%}
 zone {{ fw_dmz_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }} {  
   primary {{ fw_dmz_address }};  
   key rndc-key;  
@@ -40,6 +40,7 @@ zone {{ fw_dmz_address | ipaddr("revdns") | regex_replace('^[0-9]+\\.', '') }} {
   {% endif %}
 {% endif %}
 
+#################### Subnets #####################
 {% if fw_office_net_enabled and fw_office_net_dhcp %}
 subnet {{ fw_office_network }} netmask {{ fw_office_netmask }} {
 
@@ -69,13 +70,17 @@ subnet {{ fw_server_network }} netmask {{ fw_server_netmask }} {
 {% if fw_family_net_enabled and fw_family_net_dhcp %}
 subnet {{ fw_family_network }} netmask {{ fw_family_netmask }} {
 
-        range                           {{ fw_family_network | regex_replace('\\.[0-9]+$', '.' + (fw_family_net_dhcp_start | default('50'))) }} {{ fw_family_network | regex_replace('\\.[0-9]+$', '.' + (fw_family_net_dhcp_end | default('253'))) }};
         option routers                  {{ fw_family_address }};
         option subnet-mask              {{ fw_family_netmask }};
         option domain-name-servers      {{ fw_family_address }};
         option domain-name              "{{ fw_network_internal_domain }}";
         default-lease-time 86400;
         max-lease-time 86400;
+
+        pool {
+            range {{ fw_family_network | regex_replace('\\.[0-9]+$', '.' + (fw_family_net_dhcp_start | default('50'))) }} {{ fw_family_network | regex_replace('\\.[0-9]+$', '.' + (fw_family_net_dhcp_end | default('253'))) }};
+        }
+
 }
 {% endif %}
 
@@ -91,3 +96,54 @@ subnet {{ fw_dmz_network }} netmask {{ fw_dmz_netmask }} {
         max-lease-time 86400;
 }
 {% endif %}
+
+#################### Reservations #####################
+{% if (fw_xbox_hosts | default([])) | length > 0 %} 
+# XBox Host Reservations
+{% for xbox in fw_xbox_hosts %}
+# Reservation - {{ xbox.name }}
+host {{ xbox.hostname }} {
+     hardware ethernet {{ xbox.mac }};
+     fixed-address {{ xbox.ip }};
+} 
+{% endfor %}{%- endif -%}
+
+{% if (fw_firetv_hosts | default([])) | length > 0 %} 
+# Amazon FireTV Host Reservations
+{% for firetv in fw_firetv_hosts %}
+# Reservation - {{ firetv.name }}
+host {{ firetv.hostname }} {
+     hardware ethernet {{ firetv.mac }};
+     fixed-address {{ firetv.ip }};
+} 
+{% endfor %}{%- endif -%}
+
+{% if (fw_chromecast_hosts | default([])) | length > 0 %} 
+# Google Chromecast Host Reservations
+{% for chromecast in fw_chromecast_hosts %}
+# Reservation - {{ chromecast.name }}
+host {{ chromecast.hostname }} {
+     hardware ethernet {{ chromecast.mac }};
+     fixed-address {{ chromecast.ip }};
+} 
+{% endfor %}{%- endif -%}
+
+{% if (fw_printer_hosts | default([])) | length > 0 %} 
+# Printer Reservations
+{% for printer in fw_printer_hosts %}
+# Reservation - {{ printer.name }}
+host {{ printer.hostname }} {
+     hardware ethernet {{ printer.mac }};
+     fixed-address {{ printer.ip }};
+} 
+{% endfor %}{%- endif -%}
+
+{% if (fw_dhcp_reservations | default([])) | length > 0 %} 
+# Misc. DHCP Reservations
+{% for host in fw_dhcp_reservations %}
+# Reservation - {{ host.name }}
+host {{ host.hostname }} {
+     hardware ethernet {{ host.mac }};
+     fixed-address {{ host.ip }};
+} 
+{% endfor %}{%- endif -%}

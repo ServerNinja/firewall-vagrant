@@ -110,7 +110,45 @@ SCRIPT
             "fw_ssh_from_wan_net_enabled": true,
             "fw_dhcp_server": true,
             "fw_dns_server": true,
+            "fw_dynamic_dns": true,
+            "fw_iptables_enabled": true,
+            "fw_ipset_enabled": true,
             "fw_network_internal_domain": "reedfamilyninjas.local",
+            "fw_xbox_hosts": [{
+              "name": "XBox Wired",
+              "hostname": "xbox-wired",
+              "mac": "2C:54:91:CD:5C:19",
+              "ip": "192.168.58.49"
+            }, {
+              "name": "XBox Wireless",
+              "hostname": "xbox-wireless",
+              "mac": "2C:54:91:CD:5C:1B",
+              "ip": "192.168.58.48"
+            }],
+            "fw_chromecast_hosts": [{
+              "name": "Upstairs Chromecast",
+              "hostname": "chromecast-upstairs",
+              "mac": "3C:8D:20:02:30:DB",
+              "ip": "192.168.58.47"
+            }],
+            "fw_firetv_hosts": [{
+              "name": "Master Bedroom FireTV",
+              "hostname": "firetv-master-bed",
+              "mac": "A0:D0:DC:60:9C:22",
+              "ip": "192.168.58.46"
+            }],
+            "fw_printer_hosts": [{
+              "name": "Office Brother Printer",
+              "hostname": "brother-mfc",
+              "mac": "AC:D1:B8:79:6D:34",
+              "ip": "192.168.57.49"
+            }],
+            "fw_server_net_services": [{
+              "name": "Minecraft Bedrock",
+              "ip": "192.168.1.45",
+              "port": "19132",
+              "protocol": "tcp"
+            }],
           }
         end
       end 

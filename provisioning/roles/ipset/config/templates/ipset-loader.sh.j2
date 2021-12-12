@@ -1,0 +1,21 @@
+#!/bin/bash
+if [ $# -ne 2 ]; then
+    echo "illegal number of parameters"
+    exit 1
+fi
+
+TEMPDIR="$(mktemp -d)"
+TEMPFILE="${TEMPDIR}/blocklist"
+echo "${TEMPDIR}"
+echo "${TEMPFILE}"
+
+echo "Downloading blocklist from: $2"
+cd "${TEMPDIR}"
+
+wget -O "${TEMPFILE}.gz" "${2}"
+gunzip "${TEMPFILE}.gz"
+
+echo "Loading ipset: $1"
+cat "${TEMPFILE}" | cut -d ":" -f 2 | iprange | while read line; do ipset add ${1} $line; done
+
+trap '{ rm -rf -- "${TEMPDIR}"; }' EXIT

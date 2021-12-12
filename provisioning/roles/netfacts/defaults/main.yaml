@@ -5,8 +5,10 @@ fw_ssh_from_wan_net_enabled: false
 
 #LAN Configuration
 fw_dns_server: false
-fw_dhcp_server: true
-fw_dynamic_dns: true
+fw_dhcp_server: false
+fw_dynamic_dns: false
+fw_iptables_enabled: false
+fw_ipset_enabled: false
 
 # OFFICE Net Configuration
 fw_office_net_enabled: true
@@ -31,3 +33,29 @@ fw_dmz_net_enabled: false
 fw_dmz_net_dhcp: false
 fw_dmz_if: eth4
 fw_ssh_from_dmz_net_enabled: false
+
+# Optional extra user-defined rules
+fw_iptables_extra_inbound_rules: []
+fw_iptables_extra_outbound_rules: []
+fw_iptables_extra_forward_rules: []
+
+# Lists found here: https://www.iblocklist.com/lists.php
+fw_ipset_iblock_blocklists:
+# CINSscore.com
+- url: "http://list.iblocklist.com/?list=npkuuhuxcsllnhoamkvm&fileformat=p2p&archiveformat=gz"
+  name: blocklist_cinsscore
+# Known Hackers
+- url: "https://www.iblocklist.com/list?list=xpbqleszmajjesnzddhv"
+  name: blocklist_hackers
+## TOR & Proxies
+#- url: "http://list.iblocklist.com/?list=xoebmbyexwuiogmbyprb&fileformat=p2p&archiveformat=gz"
+#  name: blocklist_tor
+## Bad peers
+#- url: "http://list.iblocklist.com/?list=cwworuawihqvocglcoss&fileformat=p2p&archiveformat=gz"
+#  name: blocklist_bad_peers
+## Hijacked IPs
+#- url: "https://www.iblocklist.com/list?list=usrcshglbiilevmyfhse"
+#  name: blocklist_hijacked
+## Pedophiles
+#- url: "http://list.iblocklist.com/?list=dufcxgnbjsdwmwctgfuj&fileformat=p2p&archiveformat=gz"
+#  name: blocklist_pedophiles

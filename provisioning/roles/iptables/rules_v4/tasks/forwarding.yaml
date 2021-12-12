@@ -25,3 +25,8 @@
   - "-A FORWARD -i {{ fw_dmz_if }} -s {{ fw_dmz_net_cidr }} -o {{ fw_wan_if }} -j DMZ_NET_FORWARD"
   when: fw_dmz_net_enabled
   become: true
+
+- name: IPTABLES - FORWARD rules - User Defined
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items: "{{ fw_iptables_extra_forward_rules }}"
+  become: true

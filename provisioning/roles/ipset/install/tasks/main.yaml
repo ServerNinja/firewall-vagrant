@@ -1,0 +1,24 @@
+---
+- name: Configure ipset-persistent package answers
+  debconf:
+    name: iptables-persistent
+    question: "{{ item }}"
+    value: true
+    vtype: select
+  with_items:
+  - ipset-persistent/autosave
+  become: true
+  when: 
+  - ansible_os_family == "Debian"
+
+- name: Update repositories cache and install ipset and iprange
+  apt:
+    name:
+    - ipset
+    - iprange
+    - ipset-persistent
+    - curl
+    update_cache: yes
+  become: true
+  when: 
+  - ansible_os_family == "Debian"

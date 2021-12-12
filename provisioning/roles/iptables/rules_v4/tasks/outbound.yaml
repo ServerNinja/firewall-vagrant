@@ -53,6 +53,10 @@
 
 # Output rules from localhost
 #-A OUTPUT -o lo -j LO-OUTPUT-LO
+- name: IPTABLES - OUTBOUND rules - User Defined
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items: "{{ fw_iptables_extra_outbound_rules }}"
+  become: true
 
 # Allow helper ports for traceroutes
 - name: IPTABLES - OUTBOUND Traceroutes

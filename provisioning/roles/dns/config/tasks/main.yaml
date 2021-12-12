@@ -357,27 +357,55 @@
   - apparmor_config_file.changed or apparmor_named_file.changed
   become: true
 
-# Configure systemd
-- name: Render named.service systemd file
-  ansible.builtin.template:
-    src: ./templates/named.service.j2
-    dest: /etc/systemd/system/bind9.service
-    owner: root
-    group: root
-    mode: '0644'
-  become: true
-  register: named_service_file
-  when:
+- name: systemd-resolved - configure local dns
+  lineinfile:
+    path: /etc/systemd/resolved.conf
+    regex: '#DNS=.*'
+    line: "DNS=127.0.0.1"
+  register: debian_resolved
+  when: 
   - ansible_os_family == "Debian"
+  become: true
 
-- name: Enable / (Re)Start bind9 service
+- name: Enable / (Re)Start systemd-resolved service
   ansible.builtin.systemd:
-    name: bind9.service
+    name: systemd-resolved
+    state: restarted
+  when: 
+  - ansible_os_family == "Debian"
+  - debian_resolved.changed
+  become: true
+
+## Configure systemd
+#- name: Render named.service systemd file
+#  ansible.builtin.template:
+#    src: ./templates/named.service.j2
+#    dest: /etc/systemd/system/bind9.service
+#    owner: root
+#    group: root
+#    mode: '0644'
+#  become: true
+#  register: named_service_file
+#  when:
+#  - ansible_os_family == "Debian"
+#
+#- name: Enable / (Re)Start bind9 service
+#  ansible.builtin.systemd:
+#    name: bind9.service
+#    enabled: true
+#    state: restarted
+#  when: 
+#  - ansible_os_family == "Debian"
+#  - named_service_file.changed or apparmor_config_file.changed or apparmor_named_file.changed
+#  become: true
+
+- name: Enable / (Re)Start named service
+  ansible.builtin.systemd:
+    name: named.service
     enabled: true
     state: restarted
   when: 
   - ansible_os_family == "Debian"
-  - named_service_file.changed or apparmor_config_file.changed or apparmor_named_file.changed
   become: true
 
 - name: Enable / (Re)Start named service

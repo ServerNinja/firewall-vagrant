@@ -1,0 +1,30 @@
+---
+- name: IPSET - Creation of blocklist
+  ansible.builtin.shell: "ipset create \"{{ item.name }}\" hash:ip"
+  register: ipset_create_blocklist
+  failed_when: 
+  - '"Set cannot be created: set with the same name already exists" not in ipset_create_blocklist.stderr'
+  - ipset_create_blocklist.rc != 0
+  changed_when:
+  - ipset_create_blocklist.rc == 0
+  loop: "{{ fw_ipset_iblock_blocklists }}"
+  become: true
+
+- name: /usr/sbin/ipsec-loader.sh
+  ansible.builtin.template:
+    src: ./templates/ipset-loader.sh.j2
+    dest: "/usr/sbin/ipset-loader.sh"
+    mode: '0744'
+  become: true
+
+- name: Creates a cron file under /etc/cron.d
+  ansible.builtin.cron:
+    name: "ipset-loader.sh - iBlocklist - {{ item.name }}"
+    minute: "{{ ((60 / fw_ipset_iblock_blocklists|length) * ansible_loop.index0) | round | int }}"
+    hour: "0"
+    user: root
+    job: "/usr/sbin/ipset-loader.sh \"{{ item.name }}\" \"{{ item.url }}\" > /dev/null"
+  loop: "{{ fw_ipset_iblock_blocklists }}"
+  loop_control:
+    extended: yes
+  become: true

@@ -1,0 +1,88 @@
+---
+firewall:
+  hosts:
+    192.168.0.1:
+  vars:
+    # Services:
+    fw_dns_server: true
+    fw_dhcp_server: true
+    fw_dynamic_dns: true
+    fw_iptables_enabled: true
+    fw_ipset_enabled: true
+
+    # Network Options
+    fw_wan_if: enp0s31f6
+    fw_office_if: enp1s0f0
+    fw_server_if: enp1s0f1
+    fw_family_if: enp1s0f2
+    fw_dmz_if: enp1s0f3
+    fw_server_net_dhcp: false
+    fw_dmz_enabled: false
+    fw_ssh_from_wan_net_enabled: false
+
+    fw_network_internal_domain: reedfamilyninjas.local
+
+    # Special hosts
+    fw_xbox_hosts:
+    - name: XBox Wired
+      hostname: xbox-wired
+      mac: 2C:54:91:CD:5C:19
+      ip: 192.168.2.49
+    - name: XBox Wireless
+      hostname: xbox-wireless
+      mac: 2C:54:91:CD:5C:1B
+      ip: 192.168.2.48
+
+    fw_firetv_hosts:
+    - name: Master Bedroom FireTV
+      hostname: firetv-master-bed
+      mac: A0:D0:DC:60:9C:22
+      ip: 192.168.2.47
+
+    fw_chromecast_hosts:
+    - name: Upstairs Chromecast
+      hostname: chromecast-upstairs 
+      mac: 3C:8D:20:02:30:DB
+      ip: 192.168.2.46
+
+    fw_printer_hosts:
+    - name: Office Brother Printer
+      hostname: brother-mfc
+      mac: AC:D1:B8:79:6D:34
+      ip: 192.168.1.49
+
+    fw_dhcp_reservations: []
+
+    fw_server_net_services:
+    - name: Minecraft Bedrock
+      ip: 192.168.1.45
+      port: 19132
+      protocol: tcp
+    - name: Minecraft Bedrock - Flat world
+      ip: 192.168.1.45
+      port: 19133
+      protocol: tcp
+    - name: Plex Media Server - Web
+      ip: 192.168.1.45
+      port: 32400
+      protocol: tcp
+    - name: DLNA
+      ip: 192.168.1.45
+      port: 1900 
+      protocol: udp
+    - name: Plex Media Server - DLNA
+      ip: 192.168.1.45
+      port: 32469 
+      protocol: tcp 
+    - name: Jellyfin - HTTP
+      ip: 192.168.1.45
+      port: 8096
+      protocol: tcp 
+#    - name: Jellyfin - HTTPS
+#      ip: 192.168.1.45
+#      port: 8096
+#      protocol: tcp 
+    - name: Calibre-Web - HTTP
+      ip: 192.168.1.45
+      port: 9093
+      protocol: tcp 
