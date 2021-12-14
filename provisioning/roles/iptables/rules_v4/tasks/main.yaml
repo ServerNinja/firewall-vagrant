@@ -25,6 +25,7 @@
 
 # NAT Configurations
 - include_tasks: nat.yaml
+  when: fw_nat_enabled and fw_role_internet_gateway
 
 # Connection State Tracking Configs
 - include_tasks: connection_state_tracking.yaml
@@ -52,12 +53,16 @@
 
 # Forwarding anti-spoofing roles
 - include_tasks: forwarding-anti-spoof.yaml
+  when: fw_role_internet_gateway
 
 # Special Forwarding Chains from networks outbound to WAN
 - include_tasks: forwarding_net_to_wan.yaml
+  when: fw_role_internet_gateway
 
 # Include forwarding chains / global forwarding rules
 - include_tasks: forwarding.yaml
+  when: fw_role_internet_gateway
 
 # Include Forwarding Chains for traffic between intranet networks (non-WAN traffic forwarding)
 - include_tasks: forwarding_intranet.yaml
+  when: fw_role_internet_gateway

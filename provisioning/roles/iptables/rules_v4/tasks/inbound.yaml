@@ -143,5 +143,6 @@
 - name: IPTABLES - INBOUND Log DROPs Rule
   ansible.builtin.shell: "iptables {{ item }}"
   with_items:
-  - "-A INPUT -i '!lo' -j LOG --log-prefix \"DROP \" --log-ip-options --log-tcp-options"
+  - "-A INPUT -i '!lo' -j LOG --log-prefix \"DROP_INPUT \" --log-ip-options --log-tcp-options"
+  - "-A INPUT -i 'lo' -j LOG --log-prefix \"DROP_LO_INPUT \" --log-ip-options --log-tcp-options"
   become: true

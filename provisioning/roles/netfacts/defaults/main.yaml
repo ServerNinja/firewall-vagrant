@@ -1,5 +1,6 @@
 # WAN Net Configuration
-fw_nat_enabled: true
+fw_role_internet_gateway: false
+fw_nat_enabled: false
 fw_wan_if: eth0
 fw_ssh_from_wan_net_enabled: false
 
@@ -11,19 +12,19 @@ fw_iptables_enabled: false
 fw_ipset_enabled: false
 
 # OFFICE Net Configuration
-fw_office_net_enabled: true
+fw_office_net_enabled: false
 fw_office_net_dhcp: true
 fw_office_if: eth1
 fw_ssh_from_office_net_enabled: true
 
 # SERVER Net Configuration
-fw_server_net_enabled: true
+fw_server_net_enabled: false
 fw_server_net_dhcp: true
 fw_server_if: eth2
 fw_ssh_from_server_net_enabled: true
 
 # FAMILY Net Configuration
-fw_family_net_enabled: true
+fw_family_net_enabled: false
 fw_family_net_dhcp: true
 fw_family_if: eth3
 fw_ssh_from_family_net_enabled: false
@@ -45,8 +46,8 @@ fw_ipset_iblock_blocklists:
 - url: "http://list.iblocklist.com/?list=npkuuhuxcsllnhoamkvm&fileformat=p2p&archiveformat=gz"
   name: blocklist_cinsscore
 # Known Hackers
-- url: "https://www.iblocklist.com/list?list=xpbqleszmajjesnzddhv"
-  name: blocklist_hackers
+#- url: "https://www.iblocklist.com/list?list=xpbqleszmajjesnzddhv"
+#  name: blocklist_hackers
 ## TOR & Proxies
 #- url: "http://list.iblocklist.com/?list=xoebmbyexwuiogmbyprb&fileformat=p2p&archiveformat=gz"
 #  name: blocklist_tor

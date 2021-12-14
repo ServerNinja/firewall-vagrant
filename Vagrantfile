@@ -101,18 +101,22 @@ SCRIPT
             "firewall" => ansibleFirewallGroup,
           }
           ansible.extra_vars = {
+            "fw_role_internet_gateway": true,
             "fw_wan_if": "eth0",
             "fw_office_if": "eth1",
             "fw_server_if": "eth2",
             "fw_family_if": "eth3",
             "fw_dmz_if": "eth4",
-            "fw_dmz_enabled": false,
+            "fw_office_net_enabled": true,
+            "fw_server_net_enabled": true,
+            "fw_family_net_enabled": true,
             "fw_ssh_from_wan_net_enabled": true,
             "fw_dhcp_server": true,
             "fw_dns_server": true,
             "fw_dynamic_dns": true,
             "fw_iptables_enabled": true,
             "fw_ipset_enabled": true,
+            "fw_nat_enabled": true,
             "fw_network_internal_domain": "reedfamilyninjas.local",
             "fw_xbox_hosts": [{
               "name": "XBox Wired",

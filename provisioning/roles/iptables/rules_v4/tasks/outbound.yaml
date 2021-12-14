@@ -72,9 +72,38 @@
   - "-A OUTPUT -o lo -j LO-OUTPUT-LO"
   become: true
 
+- name: IPTABLES - OUTBOUND - Allow SSH to OFFICE Net
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-A OUTPUT -d {{ fw_office_net_cidr }} -p tcp --dport 22 --syn -m state --state NEW -j ACCEPT"
+  when: fw_office_net_enabled
+  become: true
+
+- name: IPTABLES - OUTBOUND - Allow SSH to SERVER Net
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-A OUTPUT -d {{ fw_server_net_cidr }} -p tcp --dport 22 --syn -m state --state NEW -j ACCEPT"
+  when: fw_server_net_enabled
+  become: true
+
+- name: IPTABLES - OUTBOUND - Allow SSH to FAMILY Net
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-A OUTPUT -d {{ fw_family_net_cidr }} -p tcp --dport 22 --syn -m state --state NEW -j ACCEPT"
+  when: fw_family_net_enabled
+  become: true
+
+- name: IPTABLES - OUTBOUND - Allow SSH to DMZ Net
+  ansible.builtin.shell: "iptables {{ item }}"
+  with_items:
+  - "-A OUTPUT -d {{ fw_dmz_net_cidr }} -p tcp --dport 22 --syn -m state --state NEW -j ACCEPT"
+  when: fw_dmz_net_enabled
+  become: true
+
 # Default OUTPUT log rule
 - name: IPTABLES - OUTBOUND Log DROPs Rule
   ansible.builtin.shell: "iptables {{ item }}"
   with_items:
-  - "-A OUTPUT -o '!lo' -j LOG --log-prefix \"DROP \" --log-ip-options --log-tcp-options"
+  - "-A OUTPUT -o '!lo' -j LOG --log-prefix \"DROP_OUTPUT \" --log-ip-options --log-tcp-options"
+  - "-A OUTPUT -o 'lo' -j LOG --log-prefix \"DROP_LO_OUPTUT \" --log-ip-options --log-tcp-options"
   become: true

@@ -1,5 +1,5 @@
 --- 
-- name: IPTABLES - Allow SSH from WAN Net
+- name: IPTABLES - Allow SSH from WAN (default) Net
   ansible.builtin.shell: "iptables {{ item }}"
   with_items:
   - "-A INPUT -i {{ fw_wan_if }} -s {{ fw_wan_net_cidr }} -p tcp --dport 22 --syn -m state --state NEW -j ACCEPT"
