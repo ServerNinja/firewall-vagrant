@@ -43,6 +43,12 @@ Vagrant.configure(2) do |config|
             ip: net['ip'],
             mac: net['mac'] || nil,
             netmask: net['netmask'] || "255.255.255.0"
+        elsif net['mode'] == "bridge"
+          node.vm.network :public_network,
+            ip: net['ip'] || nil,
+            mac: net['mac'] || nil,
+            netmask: net['netmask'] || nil,
+            bridge: net['net_bridge_order'] || nil
         else
           node.vm.network :private_network,
             name: net['name'],
@@ -107,6 +113,11 @@ SCRIPT
             "fw_server_if": "eth2",
             "fw_family_if": "eth3",
             "fw_dmz_if": "eth4",
+#            "fw_wan_if2": "eth1",
+#            "fw_office_if": "eth2",
+#            "fw_server_if": "eth3",
+#            "fw_family_if": "eth4",
+#            "fw_dmz_if": "eth5",
             "fw_office_net_enabled": true,
             "fw_server_net_enabled": true,
             "fw_family_net_enabled": true,
