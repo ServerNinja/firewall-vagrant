@@ -1,39 +1,24 @@
 ---
-### NOTE: IPTABLES and Modprobe commands are run synchronously from top down using ansible.builtin.shell
-- name: MODPROBE - Enable modules
-  ansible.builtin.shell: modprobe {{ item }}
-  with_items:
-    - ip_conntrack
-    - iptable_nat
+- name: Render /usr/local/sbin/iptablesV6.sh script
+  ansible.builtin.template:
+    src: ./templates/iptablesV6.sh.j2
+    dest: "/usr/local/sbin/iptablesV6.sh"
+    owner: root
+    group: root
+    mode: '0755'
   become: true
 
-- name: IP6TABLES - temporary configure default ACCEPT on tables
-  ansible.builtin.shell: "ip6tables {{ item }}"
-  with_items:
-  - "-P INPUT ACCEPT"
-  - "-P OUTPUT ACCEPT"
-  - "-P FORWARD ACCEPT"
+- name: Execute iptablesV6.sh script
+  ansible.builtin.shell: 
+    cmd: nohup /usr/local/sbin/iptablesV6.sh </dev/null >/dev/null 2>&1 &
   become: true
 
-- name: IP6TABLES - Flush all rules in filter and NAT tables
-  ansible.builtin.shell: "ip6tables {{ item }}"
-  with_items:
-  - "--flush"
-  - "--table nat --flush"
-  - "-X"
-  become: true
-
-# Default DROP
-- name: IP6TABLES - Configure default DROP on tables
-  ansible.builtin.shell: "ip6tables {{ item }}"
-  with_items:
-  - "-P INPUT DROP"
-  - "-P OUTPUT DROP"
-  - "-P FORWARD DROP"
-  become: true
-
-# Outbound rules (from this machine)
-- include_tasks: outbound.yaml
-
-# Inbound rules (to this machine - excludes FORWARDING)
-- include_tasks: inbound.yaml
+- name: Wait for the ssh port and reconnect 
+  wait_for:
+    port: '{{ ansible_ssh_port|default("22") }}'
+    host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+    delay: 10
+    timeout: 60
+    state: started
+  become: no
+  connection: local

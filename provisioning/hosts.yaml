@@ -9,15 +9,20 @@ firewall:
     fw_dynamic_dns: true
     fw_iptables_enabled: true
     fw_ipset_enabled: true
+    fw_role_internet_gateway: true
+    fw_nat_enabled: true
 
     # Network Options
-    fw_wan_if: enp0s31f6
+    fw_wan_if: wlp2s0
     fw_office_if: enp1s0f0
     fw_server_if: enp1s0f1
     fw_family_if: enp1s0f2
     fw_dmz_if: enp1s0f3
-    fw_server_net_dhcp: false
-    fw_dmz_enabled: false
+    fw_office_net_enabled: true
+    fw_server_net_enabled: true
+    fw_family_net_enabled: true
+    #fw_dmz_net_enabled: true
+
     fw_ssh_from_wan_net_enabled: false
 
     fw_network_internal_domain: reedfamilyninjas.local
@@ -86,3 +91,7 @@ firewall:
       ip: 192.168.1.45
       port: 9093
       protocol: tcp 
+
+    fw_iptables_extra_forward_rules:
+    # Open shit up for the family net for now...
+    - "-A FORWARD -i enp1s0f2 -s 192.168.2.0/24 -o wlp2s0 -j ACCEPT"

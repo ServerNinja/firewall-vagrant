@@ -1,9 +1,0 @@
----
-## Inbound Rules from WAN Go Here:
-
-## Default OUTPUT log rule
-- name: IP6TABLES - INBOUND Log DROPs Rule
-  ansible.builtin.shell: "ip6tables {{ item }}"
-  with_items:
-  - "-A INPUT -i '!lo' -j LOG --log-prefix \"DROP \" --log-ip-options --log-tcp-options"
-  become: true
