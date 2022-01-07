@@ -4,7 +4,7 @@
 
 # WAN Net Information
 - set_fact:
-    fw_wan_details: "{{ fw_iface_list | selectattr('device', 'equalto', fw_wan_if) | first }}"
+    fw_wan_details: "{{ fw_iface_list | selectattr('device', 'defined') | selectattr('device', 'equalto', fw_wan_if) | first }}"
 
 - set_fact:
     fw_wan_address: "{{ fw_wan_details.ipv4.address }}"
@@ -16,7 +16,7 @@
     
 # OFFICE Net Information
 - set_fact:
-    fw_office_details: "{{ fw_iface_list | selectattr('device', 'equalto', fw_office_if) | first }}"
+    fw_office_details: "{{ fw_iface_list | selectattr('device', 'defined') | selectattr('device', 'equalto', fw_office_if) | first }}"
   when: fw_office_net_enabled
 
 - set_fact:
@@ -31,7 +31,7 @@
 
 # SERVER Net Information
 - set_fact:
-    fw_server_details: "{{ fw_iface_list | selectattr('device', 'equalto', fw_server_if) | first }}"
+    fw_server_details: "{{ fw_iface_list | selectattr('device', 'defined') | selectattr('device', 'equalto', fw_server_if) | first }}"
   when: fw_server_net_enabled
 
 - set_fact:
@@ -46,7 +46,7 @@
 
 # FAMILY Net Information
 - set_fact:
-    fw_family_details: "{{ fw_iface_list | selectattr('device', 'equalto', fw_family_if) | first }}"
+    fw_family_details: "{{ fw_iface_list | selectattr('device', 'defined') | selectattr('device', 'equalto', fw_family_if) | first }}"
   when: fw_family_net_enabled
 
 - set_fact:
@@ -61,7 +61,7 @@
 
 # DMZ Net Information
 - set_fact:
-    fw_dmz_details: "{{ fw_iface_list | selectattr('device', 'equalto', fw_dmz_if) | first }}"
+    fw_dmz_details: "{{ fw_iface_list | selectattr('device', 'defined') | selectattr('device', 'equalto', fw_dmz_if) | first }}"
   when: fw_dmz_net_enabled
 
 - set_fact:

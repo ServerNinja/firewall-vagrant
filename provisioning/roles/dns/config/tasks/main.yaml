@@ -118,19 +118,27 @@
 
 - set_fact:
     dns_acl: "{{ fw_office_net_cidr }}; {{ dns_acl | default('127.0.0.0/8;') }}"
-  when: fw_office_net_dhcp
+  when: 
+  - fw_office_net_enabled
+  - fw_office_net_dhcp
 
 - set_fact:
     dns_acl: "{{ fw_server_net_cidr }}; {{ dns_acl | default('127.0.0.0/8;') }}"
-  when: fw_server_net_dhcp
+  when: 
+  - fw_server_net_enabled
+  - fw_server_net_dhcp
   
 - set_fact:
     dns_acl: "{{ fw_family_net_cidr }}; {{ dns_acl | default('127.0.0.0/8;') }}"
-  when: fw_family_net_dhcp
+  when: 
+  - fw_family_net_enabled
+  - fw_family_net_dhcp
   
 - set_fact:
     dns_acl: "{{ fw_dmz_net_cidr }}; {{ dns_acl | default('127.0.0.0/8;') }}"
-  when: fw_dmz_net_dhcp
+  when: 
+  - fw_dmz_net_enabled
+  - fw_dmz_net_dhcp
 
 - name: Render {{ bind_conf_path }}/named.conf file
   ansible.builtin.template:

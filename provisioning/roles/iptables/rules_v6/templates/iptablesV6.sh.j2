@@ -105,6 +105,8 @@ $IP6TABLES -A OUTPUT -p tcp -m tcp --dport 53 -m state --state NEW -j ACCEPT
 $IP6TABLES -A OUTPUT -p udp -m udp --dport 67 -m state --state NEW -j ACCEPT
 $IP6TABLES -A OUTPUT -p tcp -m tcp --dport 67 -m state --state NEW -j ACCEPT
 {% endif %}
+# NTP
+$IP6TABLES -A OUTPUT -p udp -m udp --dport 123 -m state --state NEW -j ACCEPT
 # ICMP
 $IP6TABLES -A OUTPUT -p icmpv6 --icmpv6-type echo-request -j ACCEPT
 # Traceroutes

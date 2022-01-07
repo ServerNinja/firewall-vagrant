@@ -2,6 +2,7 @@
 fw_role_internet_gateway: false
 fw_nat_enabled: false
 fw_wan_if: eth0
+fw_wan_if2: ""
 fw_ssh_from_wan_net_enabled: false
 
 #LAN Configuration

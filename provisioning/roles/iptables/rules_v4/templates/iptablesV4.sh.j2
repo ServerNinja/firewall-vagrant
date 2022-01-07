@@ -19,6 +19,9 @@ log_warning() {
 # Network Configurations
 # WAN Configuration
 export WAN_IF={{ fw_wan_if }}
+{% if fw_wan_if2 != "" %}
+export WAN_IF2={{ fw_wan_if2 }}
+{% endif %}
 
 {% if fw_office_net_enabled %}
 # Office
@@ -26,43 +29,45 @@ export OFFICE_NET_IF={{ fw_office_if }}
 export OFFICE_NET_IP={{ fw_office_address }}
 export OFFICE_NET_CIDR={{ fw_office_net_cidr }}
 export OFFICE_NET_MASK={{ fw_office_netmask }}
-{% endif %}
 
+{% endif %}
 {% if fw_server_net_enabled %}
 # Server
 export SERVER_NET_IF={{ fw_server_if }}
 export SERVER_NET_IP={{ fw_server_address }}
 export SERVER_NET_CIDR={{ fw_server_net_cidr }}
 export SERVER_NET_MASK={{ fw_server_netmask }}
-{% endif %}
 
+{% endif %}
 {% if fw_family_net_enabled %}
 # Family / Guest
 export FAMILY_NET_IF={{ fw_family_if }}
 export FAMILY_NET_IP={{ fw_family_address }}
 export FAMILY_NET_CIDR={{ fw_family_net_cidr }}
 export FAMILY_NET_MASK={{ fw_family_netmask }}
-{% endif %}
 
+{% endif %}
 {% if fw_dmz_net_enabled %}
 # DMZ
 export DMZ_NET_IF={{ fw_dmz_if }}
 export DMZ_NET_IP={{ fw_dmz_address }}
 export DMZ_NET_CIDR={{ fw_dmz_net_cidr }}
 export DMZ_NET_MASK={{ fw_dmz_netmask }}
-{% endif %}
 
+{% endif %}
 # Commands
 export TC=/usr/sbin/tc
 export MODPROBE=/usr/sbin/modprobe
 export IPTABLES=/usr/sbin/iptables
 export IPTABLES_SAVE=/usr/sbin/iptables-save
 
+{% if fw_tc_enabled | default(false) %}
 #############################
 # Traffic Control (tc) settings
 # Max allotted bandwidth by default
-MAX_CEIL=50mbit
+MAX_CEIL=100mbit
 
+# Priority 0:  100mbit --- 100mbit
 # Priority 1:   30mbit --- 50mbit
     PRI1_MIN=30mbit
     PRI1_MAX=50mbit
@@ -123,6 +128,7 @@ $TC class add dev $FAMILY_NET_IF parent 1: classid 1:14 htb rate $PRI4_MIN ceil 
 $TC class add dev $FAMILY_NET_IF parent 1: classid 1:15 htb rate $PRI5_MIN ceil $PRI5_MAX prio 5
 $TC -g class show dev $FAMILY_NET_IF
 {% endif %}
+{% endif %}
 
 #############################
 log_info "Configuring kernel routing / forwarding"
@@ -159,6 +165,9 @@ $IPTABLES --table mangle -X
 
 # Set up IP NAT / Masquerading on WAN port
 $IPTABLES --table nat --append POSTROUTING --out-interface ${WAN_IF} -j MASQUERADE
+{% if fw_wan_if2 != "" %}
+$IPTABLES --table nat --append POSTROUTING --out-interface ${WAN_IF2} -j MASQUERADE
+{% endif %}
 #############################
 log_info "IPTABLES - Connection State Tracking configs"
 # INPUT
@@ -180,6 +189,9 @@ $IPTABLES -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 ## Allow ssh
 {% if fw_ssh_from_wan_net_enabled %}
 $IPTABLES -A INPUT -p tcp -i $WAN_IF --dport 22 --syn -m state --state NEW -j ACCEPT
+{% if fw_wan_if2 != "" %}
+$IPTABLES --table nat --append POSTROUTING --out-interface ${WAN_IF} -j MASQUERADE
+{% endif %}
 {% endif %}
 {% if fw_office_net_enabled and fw_ssh_from_office_net_enabled %}
 $IPTABLES -A INPUT -p tcp -i $OFFICE_NET_IF -s $OFFICE_NET_CIDR --dport 22 --syn -m state --state NEW -j ACCEPT
@@ -260,6 +272,8 @@ $IPTABLES -A OUTPUT -p tcp -m tcp --dport 53 -m state --state NEW -j ACCEPT
 $IPTABLES -A OUTPUT -p udp -m udp --dport 67 -m state --state NEW -j ACCEPT
 $IPTABLES -A OUTPUT -p tcp -m tcp --dport 67 -m state --state NEW -j ACCEPT
 {% endif %}
+# NTP
+$IPTABLES -A OUTPUT -p udp -m udp --dport 123 -m state --state NEW -j ACCEPT
 # ICMP
 $IPTABLES -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
 # Traceroutes
@@ -346,7 +360,7 @@ $IPTABLES {{ line }}
 {% endif %}
 
 {% if fw_ipset_iblock_blocklists | default([]) | length > 0 %}
-  {% for list in fw_ipset_iblock_blocklists %}
+{% for list in fw_ipset_iblock_blocklists %}
 log_info "IPTABLES - IPSET {{ list.name }} INPUT Rules"
 $IPTABLES -A INPUT -m set --match-set {{ list.name }} src -j DROP
 {% endfor %}
@@ -381,13 +395,6 @@ $IPTABLES -A FORWARD -i $DMZ_NET_IF ! -s $DMZ_NET_CIDR -j LOG --log-prefix "SPOO
 $IPTABLES -A FORWARD -i $DMZ_NET_IF ! -s $DMZ_NET_CIDR -j DROP
 {% endif %}
 
-{% if fw_iptables_extra_forward_rules | default([]) | length > 0 %}
-log_info "IPTABLES - Extra FORWARD Rules"
-{% for line in fw_iptables_extra_forward_rules %}
-$IPTABLES {{ line }}
-{% endfor %}
-{% endif %}
-
 {% if fw_family_net_enabled %}
 ##############################
 # Family forwarding rules to WAN
@@ -403,12 +410,16 @@ $IPTABLES -A FAMILY_NET_FORWARD -p tcp --dport 43 -m conntrack --ctstate NEW -j 
 $IPTABLES -A FAMILY_NET_FORWARD -p tcp --dport 4321 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A FAMILY_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A FAMILY_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
+$IPTABLES -A FAMILY_NET_FORWARD -p udp --dport 123 -m conntrack --ctstate NEW -j ACCEPT
 
 # Enable traceroute UDP traffic to pass through to WAN
 $IPTABLES -A FAMILY_NET_FORWARD -p icmp --icmp-type echo-request -j ACCEPT
 $IPTABLES -A FAMILY_NET_FORWARD -p udp --dport 33434:33626 -j ACCEPT
 
 $IPTABLES -A FORWARD -i $FAMILY_NET_IF -s $FAMILY_NET_CIDR -o $WAN_IF -j FAMILY_NET_FORWARD
+{% if fw_wan_if2 != "" %}
+$IPTABLES -A FORWARD -i $FAMILY_NET_IF -s $FAMILY_NET_CIDR -o $WAN_IF2 -j FAMILY_NET_FORWARD
+{% endif %}
 {% endif %}
 
 {% if fw_office_net_enabled %}
@@ -422,15 +433,21 @@ $IPTABLES -A OFFICE_NET_FORWARD -p tcp --dport 25 -m conntrack --ctstate NEW -j 
 $IPTABLES -A OFFICE_NET_FORWARD -p tcp --dport 43 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A OFFICE_NET_FORWARD -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A OFFICE_NET_FORWARD -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT
+$IPTABLES -A OFFICE_NET_FORWARD -p tcp --dport 8080 -m conntrack --ctstate NEW -j ACCEPT
+$IPTABLES -A OFFICE_NET_FORWARD -p tcp --dport 8443 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A OFFICE_NET_FORWARD -p tcp --dport 4321 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A OFFICE_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A OFFICE_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
+$IPTABLES -A OFFICE_NET_FORWARD -p udp --dport 123 -m conntrack --ctstate NEW -j ACCEPT
  
 # Enable traceroute UDP traffic to pass through to WAN
 $IPTABLES -A OFFICE_NET_FORWARD -p icmp --icmp-type echo-request -j ACCEPT
 $IPTABLES -A OFFICE_NET_FORWARD -p udp --dport 33434:33626 -j ACCEPT
   
 $IPTABLES -A FORWARD -i $OFFICE_NET_IF -s $OFFICE_NET_CIDR -o $WAN_IF -j OFFICE_NET_FORWARD
+{% if fw_wan_if2 != "" %}
+$IPTABLES -A FORWARD -i $OFFICE_NET_IF -s $OFFICE_NET_CIDR -o $WAN_IF2 -j OFFICE_NET_FORWARD
+{% endif %}
 {% endif %}
 
 {% if fw_server_net_enabled %}
@@ -444,15 +461,21 @@ $IPTABLES -A SERVER_NET_FORWARD -p tcp --dport 25 -m conntrack --ctstate NEW -j 
 $IPTABLES -A SERVER_NET_FORWARD -p tcp --dport 43 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A SERVER_NET_FORWARD -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A SERVER_NET_FORWARD -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT
+$IPTABLES -A SERVER_NET_FORWARD -p tcp --dport 8080 -m conntrack --ctstate NEW -j ACCEPT
+$IPTABLES -A SERVER_NET_FORWARD -p tcp --dport 8443 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A SERVER_NET_FORWARD -p tcp --dport 4321 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A SERVER_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A SERVER_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
+$IPTABLES -A SERVER_NET_FORWARD -p udp --dport 123 -m conntrack --ctstate NEW -j ACCEPT
   
 # Enable traceroute UDP traffic to pass through to WAN
 $IPTABLES -A SERVER_NET_FORWARD -p icmp --icmp-type echo-request -j ACCEPT
 $IPTABLES -A SERVER_NET_FORWARD -p udp --dport 33434:33626 -j ACCEPT
   
 $IPTABLES -A FORWARD -i $SERVER_NET_IF -s $SERVER_NET_CIDR -o $WAN_IF -j SERVER_NET_FORWARD
+{% if fw_wan_if2 != "" %}
+$IPTABLES -A FORWARD -i $OFFICE_NET_IF -s $OFFICE_NET_CIDR -o $WAN_IF2 -j OFFICE_NET_FORWARD
+{% endif %}
 {% endif %}
 
 {% if fw_dmz_net_enabled %}
@@ -466,15 +489,21 @@ $IPTABLES -A DMZ_NET_FORWARD -p tcp --dport 25 -m conntrack --ctstate NEW -j ACC
 $IPTABLES -A DMZ_NET_FORWARD -p tcp --dport 43 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A DMZ_NET_FORWARD -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A DMZ_NET_FORWARD -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT
+$IPTABLES -A DMZ_NET_FORWARD -p tcp --dport 8080 -m conntrack --ctstate NEW -j ACCEPT
+$IPTABLES -A DMZ_NET_FORWARD -p tcp --dport 8443 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A DMZ_NET_FORWARD -p tcp --dport 4321 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A DMZ_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A DMZ_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
+$IPTABLES -A DMZ_NET_FORWARD -p udp --dport 123 -m conntrack --ctstate NEW -j ACCEPT
  
 # Enable traceroute UDP traffic to pass through to WAN
 $IPTABLES -A DMZ_NET_FORWARD -p icmp --icmp-type echo-request -j ACCEPT
 $IPTABLES -A DMZ_NET_FORWARD -p udp --dport 33434:33626 -j ACCEPT
   
 $IPTABLES -A FORWARD -i $DMZ_NET_IF -s $DMZ_NET_CIDR -o $WAN_IF -j DMZ_NET_FORWARD
+{% if fw_wan_if2 != "" %}
+$IPTABLES -A FORWARD -i $DMZ_NET_IF -s $DMZ_NET_CIDR -o $WAN_IF2 -j DMZ_NET_FORWARD
+{% endif %}
 {% endif %}
 
 {% if fw_server_net_enabled and fw_family_net_enabled %}
@@ -506,6 +535,7 @@ $IPTABLES -A FORWARD -i $OFFICE_NET_IF -s $OFFICE_NET_CIDR -o $SERVER_NET_IF -d 
 {% endif %}
 
 {% if fw_family_net_enabled and fw_server_net_enabled and fw_printer_hosts | default([]) |length > 0 %}
+##############################
 log_info "IPTABLES - FORWARDING FAMILY_NET_FORWARD PRINTER rules"
 $IPTABLES -N PRINTER-FAMILY-TO-SERVER
 $IPTABLES -A FAMILY_TO_SERVER_NET_FORWARD -j PRINTER-FAMILY-TO-SERVER
@@ -517,6 +547,7 @@ $IPTABLES -A PRINTER-FAMILY-TO-SERVER -p tcp --dport 631  -d {{ printer_ip.ip }}
 {% endif %}
 
 {% if fw_office_net_enabled and fw_server_net_enabled and fw_printer_hosts | default([]) |length > 0 %}
+##############################
 log_info "IPTABLES - FORWARDING OFFICE_NET_FORWARD PRINTER rules"
 $IPTABLES -N PRINTER-OFFICE-TO-SERVER
 $IPTABLES -A OFFICE_TO_SERVER_NET_FORWARD -j PRINTER-OFFICE-TO-SERVER
@@ -527,7 +558,16 @@ $IPTABLES -A PRINTER-OFFICE-TO-SERVER -p tcp --dport 631  -d {{ printer_ip.ip }}
 {% endfor %}
 {% endif %}
 
+{% if fw_iptables_extra_forward_rules | default([]) | length > 0 %}
+##############################
+log_info "IPTABLES - Extra FORWARD Rules"
+{% for line in fw_iptables_extra_forward_rules %}
+$IPTABLES {{ line }}
+{% endfor %}
+{% endif %}
+
 {% if fw_family_net_enabled and fw_server_net_enabled and fw_server_net_services | default([]) |length > 0 %}
+##############################
 log_info "IPTABLES - FORWARDING SERVER NET Services to FAMILY rules"
 {% for item in fw_server_net_services %}
 $IPTABLES -A FAMILY_TO_SERVER_NET_FORWARD -p {{ item.protocol}} --dport {{ item.port }} -d {{ item.ip }} -i $FAMILY_NET_IF -s $FAMILY_NET_CIDR -j ACCEPT -m comment --comment "Server Net SVC: {{ item.name }}"
@@ -535,6 +575,7 @@ $IPTABLES -A FAMILY_TO_SERVER_NET_FORWARD -p {{ item.protocol}} --dport {{ item.
 {% endif %}
 
 {% if fw_family_net_enabled and fw_xbox_hosts | default([]) |length > 0 %}
+##############################
 log_info "IPTABLES - FORWARDING XBOX rules"
 $IPTABLES -N XBOX-TO-WAN
 $IPTABLES -A FAMILY_NET_FORWARD -j XBOX-TO-WAN
@@ -549,6 +590,7 @@ $IPTABLES -A XBOX-TO-WAN -p udp --dport 4500 -s {{ host.ip }} -j ACCEPT
 {% endif %}
 
 {% if fw_family_net_enabled and fw_chromecast_hosts | default([]) |length > 0 %}
+##############################
 log_info "IPTABLES - FORWARDING CHROMECAST rules"
 $IPTABLES -N CHROMECAST-TO-WAN
 $IPTABLES -A FAMILY_NET_FORWARD -j CHROMECAST-TO-WAN
@@ -557,6 +599,7 @@ $IPTABLES -A CHROMECAST-TO-WAN -p tcp --dport 8008:8009 -s {{ host.ip }} -j ACCE
 {% endfor %}
 {% endif %}
 
+{% if fw_tc_enabled | default(false) %}
 ##############################
 log_info "Traffic Control Classify from POSTROUTING chain in mangle table"
 $IPTABLES -t mangle -F POSTROUTING
@@ -573,6 +616,7 @@ log_info "Traffic Control Classify from POSTROUTING chain in mangle table - XBOX
 $IPTABLES -t mangle -A TC_PRI4_HOSTS -o $FAMILY_NET_IF -d {{ host.ip }} -j CLASSIFY --set-class 1:14
 $IPTABLES -t mangle -A TC_PRI3_HOSTS -o $FAMILY_NET_IF -d {{ host.ip }} -j CLASSIFY --set-class 1:13
 {% endfor %}
+{% endif %}
 {% endif %}
 
 ##############################
