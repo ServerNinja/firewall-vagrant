@@ -23,6 +23,11 @@ firewall:
     fw_family_net_enabled: true
     #fw_dmz_net_enabled: true
 
+    # Enable / Disable traffic shaping configuration
+    fw_server_tc_enabled: false
+    fw_family_tc_enabled: false
+    fw_office_tc_enabled: false
+
     fw_ssh_from_wan_net_enabled: false
 
     fw_network_internal_domain: reedfamilyninjas.local
@@ -56,7 +61,19 @@ firewall:
       mac: AC:D1:B8:79:6D:34
       ip: 192.168.1.49
 
-    fw_dhcp_reservations: []
+    fw_dhcp_reservations:
+    - name: Linux Desktop (Jennifer)
+      hostname: jennifer-linux
+      mac: 54:04:A6:A0:B1:5D
+      ip: 192.168.1.40
+    - name: Caleb's Desktop
+      hostname: DESKTOP-9VPCR3E
+      mac: 20:68:9D:4C:1C:F4
+      ip: 192.168.2.62
+    - name: Danny's Desktop
+      hostname: DT-1
+      mac: 20:68:9D:4C:1C:F4
+      ip: 192.168.2.57
 
     fw_server_net_services:
     - name: Minecraft Bedrock
@@ -95,3 +112,30 @@ firewall:
     fw_iptables_extra_forward_rules:
     # Open shit up for the family net for now...
     - "-A FORWARD -i enp1s0f2 -s 192.168.2.0/24 -o wlp2s0 -j ACCEPT"
+    # Office VLAN to server
+    - "-A OFFICE_TO_SERVER_NET_FORWARD -d 192.168.1.45/32 -o enp1s0f1 -j ACCEPT"
+    # K8s Cluster vms on server
+    - "-A OFFICE_TO_SERVER_NET_FORWARD -d 192.168.1.20/32 -o enp1s0f1 -j ACCEPT"
+    - "-A OFFICE_TO_SERVER_NET_FORWARD -d 192.168.1.21/32 -o enp1s0f1 -j ACCEPT"
+    - "-A OFFICE_TO_SERVER_NET_FORWARD -d 192.168.1.22/32 -o enp1s0f1 -j ACCEPT"
+    # Barrier (synergy) - port 24800
+    - "-A SERVER_TO_OFFICE_NET_FORWARD -p tcp --dport 24800 -s 192.168.1.40/32 -d 192.168.0.51/32 -o enp1s0f0 -j ACCEPT"
+    # WSPR Forwarding to phone
+    - "-A SERVER_TO_FAMILY_NET_FORWARD -p tcp --dport 2237 -s 192.168.1.40/32 -d 192.168.2.63/32 -o enp1s0f2 -j ACCEPT"
+    - "-A SERVER_TO_FAMILY_NET_FORWARD -p udp --dport 2237 -s 192.168.1.40/32 -d 192.168.2.63/32 -o enp1s0f2 -j ACCEPT"
+
+    # IPSet enabled domain to IP blocking with IPTables / DNSMasq
+    fw_dnsmasq_ipset_enabled: true
+    fw_ipset_dnsmasq_blocklists:
+      - name: youtube
+        domain: 
+        - youtube.com
+        - youtube-ui.l.google.com
+
+    fw_ipset_domain_rules:
+    # Danny - Block youtube http traffic from family net - weekdays between 8AM and 5PM
+    - "-I FORWARD_IPSET_DOMAIN_RULES 1 -s 192.168.2.57/32 -m set --match-set youtube dst -p TCP --dport 443 -m time --timestart 08:00 --timestop 17:00 --weekdays Mon,Tue,Wed,Thu,Fri -j DROP"
+    - "-I FORWARD_IPSET_DOMAIN_RULES 2 -s 192.168.2.57/32 -m set --match-set youtube dst -p TCP --dport 80 -m time --timestart 08:00 --timestop 17:00 --weekdays Mon,Tue,Wed,Thu,Fri -j DROP"
+    # Caleb - Block youtube http traffic from family net - weekdays between 8AM and 5PM
+    - "-I FORWARD_IPSET_DOMAIN_RULES 1 -s 192.168.2.62/32 -m set --match-set youtube dst -p TCP --dport 443 -m time --timestart 08:00 --timestop 17:00 --weekdays Mon,Tue,Wed,Thu,Fri -j DROP"
+    - "-I FORWARD_IPSET_DOMAIN_RULES 2 -s 192.168.2.62/32 -m set --match-set youtube dst -p TCP --dport 80 -m time --timestart 08:00 --timestop 17:00 --weekdays Mon,Tue,Wed,Thu,Fri -j DROP"

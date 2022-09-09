@@ -131,11 +131,20 @@ logging {
 // messages will be useful to research why some domains don’t resolve or
 // don’t resolve reliably
 //
-     category resolver { auth_servers_log; default_debug; };
+//     category resolver { auth_servers_log; default_debug; };
+
+     channel resolver {
+          print-time yes;
+          print-category yes;
+          print-severity yes;
+          file "/var/log/named/resolver";
+          severity info;
+     };
      category cname { auth_servers_log; default_debug; };
      category delegation-only { auth_servers_log; default_debug; };
      category lame-servers { auth_servers_log; default_debug; };
      category edns-disabled { auth_servers_log; default_debug; };
+
 //
 // Log problems with DNSSEC:
 //

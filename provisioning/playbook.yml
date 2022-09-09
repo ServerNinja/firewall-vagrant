@@ -73,6 +73,12 @@
     - include_role:
         name: "dns/config"
 
+    - include_role:
+        name: "dnsmasq/install"
+
+    - include_role:
+        name: "dnsmasq/config"
+
 - hosts: firewall
   become: true
 

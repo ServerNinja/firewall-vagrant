@@ -10,6 +10,17 @@
   loop: "{{ fw_ipset_iblock_blocklists }}"
   become: true
 
+- name: IPSET - dnsmasq ipsets
+  ansible.builtin.shell: "ipset create \"{{ item.name }}\" hash:ip"
+  register: ipset_create_blocklist
+  failed_when: 
+  - '"Set cannot be created: set with the same name already exists" not in ipset_create_blocklist.stderr'
+  - ipset_create_blocklist.rc != 0
+  changed_when:
+  - ipset_create_blocklist.rc == 0
+  loop: "{{ fw_ipset_dnsmasq_blocklists | default([]) }}"
+  become: true
+
 - name: /usr/sbin/ipsec-loader.sh
   ansible.builtin.template:
     src: ./templates/ipset-loader.sh.j2

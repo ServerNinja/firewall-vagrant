@@ -1,0 +1,43 @@
+---
+firewall:
+  hosts:
+    192.168.98.1:
+  vars:
+    # Services:
+    fw_dns_server: true
+    fw_dhcp_server: true
+    fw_dynamic_dns: true
+    fw_iptables_enabled: true
+    fw_ipset_enabled: true
+    fw_role_internet_gateway: true
+    fw_nat_enabled: true
+
+    # Network Options
+    fw_wan_if: wlan0
+    fw_office_if: eth1
+    fw_office_net_enabled: true
+    fw_server_net_enabled: false
+    fw_family_net_enabled: false
+    fw_dmz_net_enabled: false
+
+    fw_ssh_from_wan_net_enabled: false
+
+    fw_network_internal_domain: reedfamilyninjas.local
+
+    # Enable / Disable traffic shaping configuration
+    fw_office_tc_enabled: false
+
+    # Special hosts
+    fw_xbox_hosts: []
+
+    fw_firetv_hosts: []
+
+    fw_chromecast_hosts: []
+
+    fw_printer_hosts: []
+
+    fw_dhcp_reservations: []
+
+    fw_server_net_services: []
+
+    fw_iptables_extra_forward_rules: []

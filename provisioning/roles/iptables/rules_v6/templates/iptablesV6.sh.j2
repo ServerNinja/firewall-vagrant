@@ -120,5 +120,5 @@ log_info "IP6TABLES - Inbound rules for this machine"
 ## Log drops
 $IP6TABLES -A INPUT -i '!lo' -j LOG --log-prefix "DROP " --log-ip-options --log-tcp-options
 ##############################
-log_info "IP6TABLES - Save Changes to /etc/iptables/rules.v6"
-bash -c "${IP6TABLES_SAVE} > /etc/iptables/rules.v6"
+log_info "IPTABLES - Save Changes with netfilter-psersistent"
+netfilter-persistent save

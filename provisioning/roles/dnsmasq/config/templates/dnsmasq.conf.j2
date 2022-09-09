@@ -1,0 +1,20 @@
+# Configuration
+port=5353
+listen-address=127.0.0.1
+conf-dir=/etc/dnsmasq.d/,*.conf
+no-hosts
+
+# Forwarders
+server=8.8.8.8
+server=8.8.4.4
+
+# Uncomment for query debugging
+#log-queries
+#log-facility=/var/log/dnsmasq.log
+
+{% if fw_ipset_dnsmasq_blocklists | default([]) | length > 0 %}
+# IPset captures for select domains:
+{% for ipset in fw_ipset_dnsmasq_blocklists %}
+ipset=/{{ ipset.domain | join('/') }}/{{ ipset.name }}
+{% endfor %}
+{% endif %}

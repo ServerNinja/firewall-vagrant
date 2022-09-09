@@ -186,6 +186,15 @@ $IPTABLES -A FORWARD -m conntrack --ctstate INVALID -j DROP
 $IPTABLES -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 #############################
+## Configure forwarding table for IPSET domain Drop/Allow
+log_info "IPTABLES - configure IPSET forwarding rules for allow / deny"
+$IPTABLES -N FORWARD_IPSET_DOMAIN_RULES
+$IPTABLES -A FORWARD -j FORWARD_IPSET_DOMAIN_RULES
+{% for line in fw_ipset_domain_rules %}
+$IPTABLES {{ line }}
+{% endfor %}
+
+#############################
 ## Allow ssh
 {% if fw_ssh_from_wan_net_enabled %}
 $IPTABLES -A INPUT -p tcp -i $WAN_IF --dport 22 --syn -m state --state NEW -j ACCEPT
@@ -238,6 +247,13 @@ $IPTABLES -A LO-OUTPUT-LO -p tcp --dport 53 -m state --state NEW -j ACCEPT
 $IPTABLES -A LO-OUTPUT-LO -p udp --dport 53 -m state --state NEW -j ACCEPT
 $IPTABLES -A LO-INPUT-LO -p tcp --dport 53 -m state --state NEW -j ACCEPT
 $IPTABLES -A LO-INPUT-LO -p udp --dport 53 -m state --state NEW -j ACCEPT
+
+{% if fw_dnsmasq_ipset_enabled | default(false) %}
+$IPTABLES -A LO-OUTPUT-LO -p tcp --dport 5353 -m state --state NEW -j ACCEPT
+$IPTABLES -A LO-OUTPUT-LO -p udp --dport 5353 -m state --state NEW -j ACCEPT
+$IPTABLES -A LO-INPUT-LO -p tcp --dport 5353 -m state --state NEW -j ACCEPT
+$IPTABLES -A LO-INPUT-LO -p udp --dport 5353 -m state --state NEW -j ACCEPT
+{% endif %}
 
 ##############################
 #log_info "IPTABLES - Outbound rules for this machine"
@@ -412,6 +428,9 @@ $IPTABLES -A FAMILY_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j 
 $IPTABLES -A FAMILY_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A FAMILY_NET_FORWARD -p udp --dport 123 -m conntrack --ctstate NEW -j ACCEPT
 
+# MS Teams
+$IPTABLES -A FAMILY_NET_FORWARD -p udp --dport 3478:3481 -d 13.107.64.0/18,52.112.0.0/14,52.120.0.0/14 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "MS Teams"
+
 # Enable traceroute UDP traffic to pass through to WAN
 $IPTABLES -A FAMILY_NET_FORWARD -p icmp --icmp-type echo-request -j ACCEPT
 $IPTABLES -A FAMILY_NET_FORWARD -p udp --dport 33434:33626 -j ACCEPT
@@ -439,6 +458,9 @@ $IPTABLES -A OFFICE_NET_FORWARD -p tcp --dport 4321 -m conntrack --ctstate NEW -
 $IPTABLES -A OFFICE_NET_FORWARD -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A OFFICE_NET_FORWARD -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
 $IPTABLES -A OFFICE_NET_FORWARD -p udp --dport 123 -m conntrack --ctstate NEW -j ACCEPT
+
+# MS Teams
+$IPTABLES -A OFFICE_NET_FORWARD -p udp --dport 3478:3481 -d 13.107.64.0/18,52.112.0.0/14,52.120.0.0/14 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "MS Teams"
  
 # Enable traceroute UDP traffic to pass through to WAN
 $IPTABLES -A OFFICE_NET_FORWARD -p icmp --icmp-type echo-request -j ACCEPT
@@ -620,5 +642,5 @@ $IPTABLES -t mangle -A TC_PRI3_HOSTS -o $FAMILY_NET_IF -d {{ host.ip }} -j CLASS
 {% endif %}
 
 ##############################
-log_info "IPTABLES - Save Changes to /etc/iptables/rules.v4"
-bash -c "${IPTABLES_SAVE} > /etc/iptables/rules.v4"
+log_info "IPTABLES - Save Changes with netfilter-psersistent"
+netfilter-persistent save

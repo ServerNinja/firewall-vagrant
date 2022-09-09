@@ -18,10 +18,10 @@ node_info:
       cpus: 1            # <=== Default to 1 if not defined
       role: firewall
       networks:
-        - name: vboxnet1      # Internet Connection #2
-          mode: bridge
-          net_bridge_order:
-          - "en0: Wi-Fi (Wireless)"
+#        - name: vboxnet1      # Internet Connection #2
+#          mode: bridge
+#          net_bridge_order:
+#          - "en0: Wi-Fi (Wireless)"
         - name: vboxnet2      # Office Network
           mode: private
           ip: 192.168.56.254
@@ -66,12 +66,13 @@ node_info:
           nameservers: "[ 8.8.8.8, 8.8.4.4 ]"
 
 ansible_settings:
+  fw_dnsmasq_ipset_enabled: true  # Experimental
   fw_role_internet_gateway: true
   fw_wan_if: eth0
-  fw_wan_if2: eth1
-  fw_office_if: eth2
-  fw_server_if: eth3
-  fw_family_if: eth4
+#  fw_wan_if2: eth1
+  fw_office_if: eth1
+  fw_server_if: eth2
+  fw_family_if: eth3
   fw_tc_enabled: false
   fw_office_net_enabled: true
   fw_server_net_enabled: true
@@ -82,8 +83,17 @@ ansible_settings:
   fw_dynamic_dns: true
   fw_iptables_enabled: true
   fw_ipset_enabled: true
+  fw_ipset_domain_rules:
+  # Block youtube http traffic from family net 
+  - "-I FORWARD_IPSET_DOMAIN_RULES 1 -s 192.168.58.0/24 -m set --match-set youtube dst -p TCP --dport 443 -j DROP"
+  - "-I FORWARD_IPSET_DOMAIN_RULES 2 -s 192.168.58.0/24 -m set --match-set youtube dst -p TCP --dport 80 -j DROP"
   fw_nat_enabled: true
   fw_network_internal_domain: reedfamilyninjas.local
+  fw_ipset_dnsmasq_blocklists:
+  - name: youtube
+    domain: 
+    - youtube.com
+    - youtube-ui.l.google.com
   fw_xbox_hosts:
   - name: XBox Wired
     hostname: xbox-wired

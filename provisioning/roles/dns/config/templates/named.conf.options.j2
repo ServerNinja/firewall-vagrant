@@ -35,8 +35,12 @@ options {
         // this server doesn't know how to resolve them
         forward only;
         forwarders { 
+        {% if fw_dnsmasq_ipset_enabled | default(false) %}
+            127.0.0.1 port 5353;
+        {% else %}
             8.8.8.8; 
             8.8.4.4; 
+        {% endif %}
         };
 
         auth-nxdomain no;
